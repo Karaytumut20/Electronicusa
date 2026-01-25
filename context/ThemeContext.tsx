@@ -1,0 +1,1 @@
+// Deprecated: Dark mode removed\nexport const ThemeProvider = ({children}) => <>{children}</>;\nexport const useTheme = () => ({ theme: 'light' });
