@@ -14,9 +14,9 @@ export default function RecentAdsWidget() {
       <div className="bg-gray-50 p-3 border-b border-gray-100 flex justify-between items-center">
         <h3 className="text-xs font-bold text-[#333] flex items-center gap-1">
           <History size={14} className="text-blue-600" />
-          Son Gezilenler
+          Recently Viewed
         </h3>
-        <button onClick={clearHistory} className="text-gray-400 hover:text-red-500" title="Temizle">
+        <button onClick={clearHistory} className="text-gray-400 hover:text-red-500" title="Clear">
           <Trash2 size={12} />
         </button>
       </div>

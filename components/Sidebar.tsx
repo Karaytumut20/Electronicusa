@@ -1,17 +1,17 @@
 "use client";
 import React from 'react';
 import Link from 'next/link';
-import { Home, Car, Monitor, Briefcase, Shirt, BookOpen, Dog, Hammer, ChevronRight } from 'lucide-react';
+import { Home, Car, Monitor, Briefcase, Shirt, BookOpen, Dog, Hammer, ChevronRight, Smartphone, Gamepad2, Tv, Camera, Zap } from 'lucide-react';
 import RecentAdsWidget from '@/components/RecentAdsWidget';
 
-const iconMap: any = { Home, Car, Monitor, Briefcase, Shirt, BookOpen, Dog, Hammer };
+const iconMap: any = { Home, Car, Monitor, Briefcase, Shirt, BookOpen, Dog, Hammer, Smartphone, Gamepad2, Tv, Camera, Zap };
 
 export default function Sidebar({ categories }: { categories: any[] }) {
   return (
     <div className="space-y-6">
       <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
         <div className="p-4 border-b border-gray-50 bg-gray-50/50">
-          <h3 className="font-bold text-gray-800 text-sm">Kategoriler</h3>
+          <h3 className="font-bold text-gray-800 text-sm">Categories</h3>
         </div>
         <ul className="divide-y divide-gray-50">
           {categories.map((cat) => {
@@ -26,7 +26,7 @@ export default function Sidebar({ categories }: { categories: any[] }) {
                   <ChevronRight size={14} className="text-gray-300 group-hover:text-indigo-400 opacity-50 group-hover:opacity-100 transition-all" />
                 </Link>
 
-                {/* Mega Menu (Hover) */}
+                {/* Mega Menu */}
                 {cat.subs && cat.subs.length > 0 && (
                   <div className="hidden group-hover:block absolute left-[100%] top-0 w-64 bg-white border border-gray-100 shadow-xl rounded-r-xl p-4 z-50 ml-2 animate-in fade-in slide-in-from-left-2 duration-200">
                     <h4 className="font-bold text-gray-800 mb-3 pb-2 border-b border-gray-100">{cat.title}</h4>
@@ -47,9 +47,9 @@ export default function Sidebar({ categories }: { categories: any[] }) {
 
       <RecentAdsWidget />
 
-      {/* Reklam Alanı - Tasarım Bütünlüğü İçin Styled */}
+      {/* Ad Space */}
       <div className="h-[250px] bg-gradient-to-br from-gray-100 to-gray-200 rounded-xl flex items-center justify-center border border-gray-200 border-dashed">
-        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Reklam Alanı</span>
+        <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Ad Space</span>
       </div>
     </div>
   );

@@ -41,5 +41,13 @@ export const categories = [
       { id: 'digital', title: 'Digital Cameras', slug: 'digital-cameras', icon: 'Camera' },
       { id: 'drones', title: 'Drones', slug: 'drones', icon: 'Plane' }
     ]
+  },
+  {
+    id: 'smart-home', title: 'Smart Home', icon: 'Zap', slug: 'smart-home',
+    subs: [
+        { id: 'robot', title: 'Robot Vacuums', slug: 'robot-vacuums', icon: 'Bot' }
+    ]
   }
 ];
+
+export const cities = ['New York', 'California', 'Texas', 'Florida', 'Illinois', 'Washington', 'Nevada', 'Massachusetts'];

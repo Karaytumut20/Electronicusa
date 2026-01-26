@@ -30,22 +30,22 @@ export default function HomeFeed({ initialAds }: { initialAds: any[] }) {
     }
   };
 
-  // EMPTY STATE (HİÇ İLAN YOKSA)
+  // EMPTY STATE
   if (!ads || ads.length === 0) {
       return (
           <div className="flex flex-col items-center justify-center py-20 bg-white border border-gray-100 rounded-xl shadow-sm text-center">
               <div className="bg-blue-50 p-6 rounded-full mb-6 animate-in zoom-in duration-300">
                   <SearchX size={48} className="text-blue-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Henüz Yayında İlan Yok</h2>
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">No Active Ads Yet</h2>
               <p className="text-gray-500 max-w-md mb-8">
-                  Şu anda vitrinde gösterilecek aktif bir ilan bulunmamaktadır. İlk ilanı siz vererek binlerce alıcıya ulaşabilirsiniz!
+                  There are no ads to display in the showcase right now. Be the first to reach thousands of buyers!
               </p>
               <Link
                   href="/ilan-ver"
                   className="bg-indigo-600 text-white px-8 py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all shadow-lg hover:shadow-indigo-200 flex items-center gap-2"
               >
-                  <PlusCircle size={20} /> Hemen Ücretsiz İlan Ver
+                  <PlusCircle size={20} /> Post Free Ad
               </Link>
           </div>
       );
@@ -53,16 +53,16 @@ export default function HomeFeed({ initialAds }: { initialAds: any[] }) {
 
   return (
     <div className="space-y-6">
-      {/* Vitrin Başlığı */}
+      {/* Showcase Header */}
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
           <span className="w-2 h-8 bg-indigo-600 rounded-full"></span>
-          Vitrindeki İlanlar
+          Showcase Ads
         </h2>
-        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{ads.length} İlan</span>
+        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-3 py-1 rounded-full">{ads.length} Ads</span>
       </div>
 
-      {/* Grid: Mobilde 2 sütun, Tablette 3, Masaüstünde 4-5 */}
+      {/* Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-6">
         {ads.map((ad) => (
           <div key={ad.id} className="h-full animate-in fade-in zoom-in-95 duration-500">
@@ -71,7 +71,7 @@ export default function HomeFeed({ initialAds }: { initialAds: any[] }) {
         ))}
       </div>
 
-      {/* Yükle Butonu */}
+      {/* Load More Button */}
       {hasMore && (
         <div className="pt-8 text-center">
           <button
@@ -80,7 +80,7 @@ export default function HomeFeed({ initialAds }: { initialAds: any[] }) {
             className="group relative inline-flex items-center justify-center px-8 py-3 text-sm font-bold text-indigo-600 transition-all duration-200 bg-white border-2 border-indigo-50 rounded-full hover:bg-indigo-50 hover:border-indigo-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-600 disabled:opacity-50"
           >
             {loading ? <Loader2 className="animate-spin mr-2" size={18}/> : <ArrowDown className="mr-2 group-hover:translate-y-1 transition-transform" size={18}/>}
-            {loading ? 'Yükleniyor...' : 'Daha Fazla Göster'}
+            {loading ? 'Loading...' : 'Load More'}
           </button>
         </div>
       )}

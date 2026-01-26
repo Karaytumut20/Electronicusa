@@ -17,7 +17,7 @@ export const categoryTree: CategoryNode[] = [
       { id: 'laptops', title: 'Laptops', slug: 'laptops', isDynamic: true, dynamicType: 'computer' },
       { id: 'desktops', title: 'Desktops', slug: 'desktops' },
       { id: 'tablets', title: 'Tablets', slug: 'tablets' },
-      { id: 'components', title: 'PC Components', slug: 'components' }
+      { id: 'components', title: 'Components', slug: 'components' }
     ]
   },
   {
