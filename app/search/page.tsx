@@ -1,5 +1,5 @@
 import React from 'react';
-import { getAdsServer } from '@/lib/actions';
+import { getAdsServer, getCategoryTreeServer } from '@/lib/actions';
 import AdCard from '@/components/AdCard';
 import FilterSidebar from '@/components/FilterSidebar';
 import Pagination from '@/components/Pagination';
@@ -7,12 +7,11 @@ import ViewToggle from '@/components/ViewToggle';
 import SmartCategoryGrid from '@/components/SmartCategoryGrid';
 import { SearchX, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
-import SearchHeader from '@/components/SearchHeader';
 
 export default async function SearchPage(props: { searchParams: Promise<any> }) {
   const searchParams = await props.searchParams;
+  const categories = await getCategoryTreeServer(); // Dinamik kategorileri çek
 
-  // Decision Engine
   const manualSearch = searchParams.showResults === 'true';
   const textSearch = !!searchParams.q;
   const isDeepLevelCar = !!searchParams.model;
@@ -35,16 +34,16 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Sidebar */}
+        {/* Sidebar: Kategorileri prop olarak alıyor */}
         <aside className="hidden lg:block lg:col-span-3">
-          <FilterSidebar />
+          <FilterSidebar categories={categories} />
         </aside>
 
         {/* Main Content */}
         <main className="lg:col-span-9 min-w-0">
 
            {!shouldFetchAds && (
-             <SmartCategoryGrid searchParams={searchParams} />
+             <SmartCategoryGrid searchParams={searchParams} categories={categories} />
            )}
 
            {shouldFetchAds ? (

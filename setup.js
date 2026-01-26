@@ -11,309 +11,104 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 CACHE HATASI DÜZELTİLİYOR (Static Client Entegrasyonu)...\n" +
+    "\n🚀 ADMIN USERS SAYFASINDAKİ SUPABASE IMPORT HATASI DÜZELTİLİYOR...\n" +
     colors.reset,
 );
 
 const filesToUpdate = [
   {
-    path: "lib/actions.ts",
-    content: `'use server'
-import { createClient, createStaticClient } from '@/lib/supabase/server'
-import { revalidatePath, unstable_cache } from 'next/cache'
-import { adSchema } from '@/lib/schemas'
-import { logActivity } from '@/lib/logger'
-import { AdFormData } from '@/types'
-import { analyzeAdContent } from '@/lib/moderation/engine'
+    path: "app/admin/users/page.tsx",
+    content: `"use client";
+import React, { useEffect, useState } from 'react';
+import { Search, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client'; // DÜZELTME: createClient import edildi
 
-// --- YARDIMCI FONKSİYONLAR ---
-async function checkRateLimit(userId: string) {
-    const supabase = await createClient();
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    const { count } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', oneDayAgo);
-    return (count || 0) < 10;
+export default function AdminUsersPage() {
+  const [users, setUsers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+
+  // DÜZELTME: İstemci burada oluşturuldu
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function load() {
+        const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+        if(data) setUsers(data);
+        setLoading(false);
+    }
+    load();
+  }, []);
+
+  const filtered = users.filter(u =>
+    (u.full_name?.toLowerCase().includes(search.toLowerCase())) ||
+    (u.email?.toLowerCase().includes(search.toLowerCase()))
+  );
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-bold text-slate-800">User Management</h1>
+        <div className="relative w-64">
+            <Search className="absolute left-3 top-2.5 text-gray-400" size={18}/>
+            <input
+                className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder="Search users..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+            />
+        </div>
+      </div>
+
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
+                <tr>
+                    <th className="px-6 py-4">User</th>
+                    <th className="px-6 py-4">Role</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4">Joined</th>
+                    <th className="px-6 py-4 text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+                {loading ? <tr><td colSpan={5} className="p-6 text-center">Loading...</td></tr> : filtered.map(user => (
+                    <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
+                                    {user.full_name?.charAt(0) || 'U'}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-900">{user.full_name || 'No Name'}</p>
+                                    <p className="text-xs text-gray-500">{user.email}</p>
+                                </div>
+                            </div>
+                        </td>
+                        <td className="px-6 py-4">
+                            <span className={\`px-2 py-1 rounded text-xs font-bold \${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}\`}>
+                                {user.role || 'user'}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4">
+                            <span className="flex items-center gap-1 text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded w-fit">
+                                <CheckCircle size={12}/> Active
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 text-gray-500">
+                            {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                            <button className="text-gray-400 hover:text-indigo-600"><MoreVertical size={18}/></button>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </table>
+      </div>
+    </div>
+  );
 }
-
-// --- İLAN OLUŞTURMA ---
-export async function createAdAction(formData: Partial<AdFormData>) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' }
-
-  if (!(await checkRateLimit(user.id))) return { error: 'Günlük ilan limiti dolu.' };
-
-  const validation = adSchema.safeParse(formData);
-  if (!validation.success) return { error: validation.error.issues[0].message };
-
-  const analysis = analyzeAdContent(validation.data.title, validation.data.description);
-
-  const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
-  if (!profile) await supabase.from('profiles').insert([{ id: user.id, email: user.email }]);
-
-  const { data, error } = await supabase.from('ads').insert([{
-    ...validation.data,
-    user_id: user.id,
-    status: 'onay_bekliyor',
-    is_vitrin: false, is_urgent: false,
-    moderation_score: analysis.score, moderation_tags: analysis.flags,
-    admin_note: analysis.autoReject ? \`OTOMATİK RET: \${analysis.rejectReason}\` : null
-  }]).select('id').single()
-
-  if (error) return { error: \`Hata: \${error.message}\` }
-
-  await logActivity(user.id, 'CREATE_AD', { adId: data.id, title: validation.data.title });
-  if (analysis.autoReject) return { error: \`İlan reddedildi: \${analysis.rejectReason}\` };
-
-  revalidatePath('/');
-  return { success: true, adId: data.id }
-}
-
-// --- İLAN LİSTELEME ---
-export async function getInfiniteAdsAction(page = 1, limit = 20) {
-    const supabase = await createClient();
-    const start = (page - 1) * limit;
-    const end = start + limit - 1;
-
-    const { data, count, error } = await supabase
-        .from('ads')
-        .select('*, profiles(full_name)', { count: 'exact' })
-        .eq('status', 'yayinda')
-        .order('is_vitrin', { ascending: false })
-        .order('created_at', { ascending: false })
-        .range(start, end);
-
-    if (error) return { data: [], total: 0, hasMore: false };
-    return { data: data || [], total: count || 0, hasMore: (count || 0) > end + 1 };
-}
-
-export async function getAdsServer(searchParams: any) {
-  const supabase = await createClient()
-  const page = Number(searchParams?.page) || 1;
-  const limit = 20;
-  const from = (page - 1) * limit;
-  const to = from + limit - 1;
-
-  let query = supabase.from('ads').select('*, profiles(full_name), categories(title)', { count: 'exact' }).eq('status', 'yayinda');
-
-  if (searchParams?.q) query = query.textSearch('fts', searchParams.q, { config: 'turkish', type: 'websearch' });
-  if (searchParams?.minPrice) query = query.gte('price', searchParams.minPrice);
-  if (searchParams?.maxPrice) query = query.lte('price', searchParams.maxPrice);
-  if (searchParams?.city) query = query.eq('city', searchParams.city);
-  if (searchParams?.category) query = query.eq('category', searchParams.category);
-  if (searchParams?.brand) query = query.eq('brand', searchParams.brand);
-
-  if (searchParams?.sort === 'price_asc') query = query.order('price', { ascending: true });
-  else if (searchParams?.sort === 'price_desc') query = query.order('price', { ascending: false });
-  else query = query.order('is_vitrin', { ascending: false }).order('created_at', { ascending: false });
-
-  query = query.range(from, to);
-  const { data, count, error } = await query;
-
-  if (error) return { data: [], count: 0, totalPages: 0 };
-  return { data: data || [], count: count || 0, totalPages: count ? Math.ceil(count / limit) : 0 };
-}
-
-// --- DİNAMİK KATEGORİ SİSTEMİ (DÜZELTİLDİ: STATIC CLIENT) ---
-export const getCategoryTreeServer = unstable_cache(
-  async () => {
-    // DÜZELTME: createClient() yerine createStaticClient() kullanılıyor.
-    // createStaticClient cookies() kullanmaz, bu yüzden cache içinde güvenlidir.
-    const supabase = createStaticClient();
-
-    const { data, error } = await supabase
-        .from('categories')
-        .select('*')
-        .order('title', { ascending: true });
-
-    if (error || !data) return [];
-
-    const roots = data.filter(c => !c.parent_id);
-    return roots.map(root => ({
-        ...root,
-        subs: data.filter(c => c.parent_id === root.id)
-    }));
-  },
-  ['category-tree-cache'],
-  { revalidate: 3600, tags: ['categories'] }
-);
-
-export async function addCategoryAction(categoryData: { title: string, slug: string, icon: string, parent_id?: number }) {
-    const supabase = await createClient();
-    const { data, error } = await supabase.from('categories').insert([categoryData]).select().single();
-    if (error) return { error: error.message };
-    revalidatePath('/');
-    return { success: true, data };
-}
-
-// --- İLAN DETAY & İŞLEMLER ---
-export async function getAdDetailServer(id: number) {
-  const supabase = await createClient()
-  const { data } = await supabase.from('ads').select('*, profiles(*), categories(title)').eq('id', id).single()
-  return data
-}
-
-export async function updateAdAction(id: number, formData: any) {
-    const supabase = await createClient();
-    const { error } = await supabase.from('ads').update(formData).eq('id', id);
-    if (error) return { error: error.message };
-    revalidatePath('/bana-ozel/ilanlarim');
-    return { success: true };
-}
-
-export async function approveAdAction(id: number) {
-    const supabase = await createClient();
-    const { error } = await supabase.from('ads').update({ status: 'yayinda' }).eq('id', id);
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-}
-
-export async function rejectAdAction(id: number, reason: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.from('ads').update({ status: 'reddedildi', admin_note: reason }).eq('id', id);
-    if (error) return { success: false, error: error.message };
-    return { success: true };
-}
-
-export async function deleteAdSafeAction(adId: number) {
-    const supabase = await createClient();
-    await supabase.from('ads').update({ status: 'pasif' }).eq('id', adId);
-    revalidatePath('/bana-ozel/ilanlarim');
-    return { message: 'Silindi' };
-}
-
-// --- KULLANICI & PROFİL ---
-export async function updateProfileAction(d: any) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'Auth error' };
-    const updates = { full_name: d.full_name, phone: d.phone, avatar_url: d.avatar_url, show_phone: d.show_phone };
-    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
-    return { success: !error, error: error ? error.message : null };
-}
-
-export async function updatePasswordAction(password: string) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.updateUser({ password });
-    return { success: !error, error: error?.message };
-}
-
-// --- MAĞAZA İŞLEMLERİ ---
-export async function getMyStoreServer() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return null;
-  const { data } = await supabase.from('stores').select('*').eq('user_id', user.id).single();
-  return data;
-}
-
-export async function createStoreAction(formData: any) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
-  const { error } = await supabase.from('stores').insert([{ ...formData, user_id: user.id }]);
-  if (error) return { error: 'Hata oluştu.' };
-  await supabase.from('profiles').update({ role: 'store' }).eq('id', user.id);
-  revalidatePath('/bana-ozel/magazam');
-  return { success: true };
-}
-
-export async function updateStoreAction(formData: any) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
-  const { error } = await supabase.from('stores').update(formData).eq('user_id', user.id);
-  if (error) return { error: 'Güncelleme başarısız.' };
-  revalidatePath('/bana-ozel/magazam');
-  return { success: true };
-}
-
-export async function getStoreBySlugServer(slug: string) {
-  const supabase = await createClient();
-  const { data } = await supabase.from('stores').select('*').eq('slug', slug).single();
-  return data;
-}
-
-export async function getStoreAdsServer(userId: string) {
-  const supabase = await createClient();
-  const { data } = await supabase.from('ads').select('*').eq('user_id', userId).eq('status', 'yayinda');
-  return data || [];
-}
-
-// --- DİĞERLERİ ---
-export async function getAdFavoriteCount(adId: number) {
-    const supabase = await createClient();
-    const { count } = await supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('ad_id', adId);
-    return count || 0;
-}
-
-export async function getSellerReviewsServer(id: string) {
-    const supabase = await createClient();
-    const { data } = await supabase.from('reviews').select('*').eq('target_user_id', id);
-    return data || [];
-}
-
-export async function createReviewAction(targetId: string, rating: number, comment: string, adId: number) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Giriş gerekli' };
-    await supabase.from('reviews').insert({ target_user_id: targetId, reviewer_id: user.id, rating, comment, ad_id: adId });
-    return { success: true };
-}
-
-export async function getRelatedAdsServer(cat: string, id: number, price?: number) {
-    const supabase = await createClient();
-    const { data } = await supabase.from('ads').select('*').eq('category', cat).neq('id', id).limit(4);
-    return data || [];
-}
-
-export async function incrementViewCountAction(id: number) {
-    const supabase = await createClient();
-    await supabase.rpc('increment_view_count', { ad_id_input: id });
-}
-
-export async function getUserDashboardStats() {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return [];
-    const { data } = await supabase.from('ads').select('status, view_count, price').eq('user_id', user.id);
-    return data || [];
-}
-
-export async function createReportAction(adId: number, reason: string, description: string) {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('reports').insert([{ ad_id: adId, user_id: user?.id || null, reason, description }]);
-    if (error) return { error: error.message };
-    return { success: true };
-}
-
-export async function getAuditLogsServer() {
-    const supabase = await createClient();
-    const { data } = await supabase.from('audit_logs').select('*, profiles(full_name, email)').order('created_at', { ascending: false }).limit(100);
-    return data || [];
-}
-
-export async function getAdsByIds(ids: number[]) {
-    if(!ids.length) return [];
-    const supabase = await createClient();
-    const { data } = await supabase.from('ads').select('*').in('id', ids);
-    return data || [];
-}
-
-export async function getPageBySlugServer(slug: string) {
-    return { title: 'Kurumsal', content: '<p>İçerik</p>' };
-}
-
-export async function getHelpContentServer() {
-    return { categories: [], faqs: [] };
-}
-
-// Deprecated or Placeholders
-export async function activateDopingAction(id: number, types: string[]) { return { success: true } }
-export async function getAdminStatsServer() { return { totalUsers: 0, activeAds: 0, totalRevenue: 0 }; }
-export async function getLocationsServer() { return []; }
-export async function getDistrictsServer(cityName: string) { return []; }
-export async function getFacetCountsServer() { return []; }
 `,
   },
 ];
@@ -338,6 +133,6 @@ filesToUpdate.forEach((file) => {
 
 console.log(
   colors.green +
-    "\n✅ Runtime hatası giderildi! Artık npm run dev ile sorunsuz çalışması gerekiyor." +
+    "\n✅ Import hatası giderildi! `npm run dev` komutuyla projeyi çalıştırabilirsiniz." +
     colors.reset,
 );

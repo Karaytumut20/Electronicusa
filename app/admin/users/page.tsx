@@ -1,12 +1,15 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Search, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase/client';
+import { createClient } from '@/lib/supabase/client'; // DÜZELTME: createClient import edildi
 
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+
+  // DÜZELTME: İstemci burada oluşturuldu
+  const supabase = createClient();
 
   useEffect(() => {
     async function load() {

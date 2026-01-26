@@ -5,7 +5,7 @@ import { Filter, RotateCcw, ChevronDown, ChevronUp, Search, Cpu, Monitor } from 
 import { computerBrands, phoneBrands } from '@/lib/hierarchyData';
 import { processors, ramOptions, screenSizes, gpuCapacities, ssdCapacities } from '@/lib/computerData';
 
-export default function FilterSidebar() {
+export default function FilterSidebar({ categories }: { categories: any[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [filters, setFilters] = useState<any>({});
@@ -45,7 +45,7 @@ export default function FilterSidebar() {
   // Brands logic
   const cat = filters.category || '';
   let activeBrands = computerBrands;
-  if (cat.includes('phone') || cat.includes('mobile')) activeBrands = phoneBrands;
+  if (cat.includes('phone') || cat.includes('mobile') || cat.includes('apple')) activeBrands = phoneBrands;
 
   const FilterSection = ({ id, title, icon: Icon, children }: any) => (
       <div className="border-b border-gray-100 py-4 last:border-0">

@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { ChevronRight, LayoutGrid, List } from 'lucide-react';
-import { categoryTree, computerBrands } from '@/lib/hierarchyData';
+import { computerBrands } from '@/lib/hierarchyData';
 
 function findCategoryBySlug(cats: any[], slug: string): any {
   for (const cat of cats) {
@@ -15,14 +15,14 @@ function findCategoryBySlug(cats: any[], slug: string): any {
   return null;
 }
 
-export default function SmartCategoryGrid({ searchParams }: { searchParams: any }) {
+export default function SmartCategoryGrid({ searchParams, categories }: { searchParams: any, categories: any[] }) {
   const currentSlug = searchParams.category;
   const currentBrand = searchParams.brand;
 
-  const categoryNode = currentSlug ? findCategoryBySlug(categoryTree, currentSlug) : null;
+  const categoryNode = currentSlug ? findCategoryBySlug(categories, currentSlug) : null;
 
   if (!categoryNode) {
-    return <GridDisplay items={categoryTree} type="category" parentParams={searchParams} title="Categories" />;
+    return <GridDisplay items={categories} type="category" parentParams={searchParams} title="Categories" />;
   }
 
   if (categoryNode.subs && categoryNode.subs.length > 0) {
@@ -37,19 +37,20 @@ export default function SmartCategoryGrid({ searchParams }: { searchParams: any 
     );
   }
 
-  if (categoryNode.isDynamic) {
-      if (!currentBrand) {
-          const brands = computerBrands.sort().map(b => ({ id: b, title: b, slug: b.toLowerCase() }));
-          return (
-            <GridDisplay
-                items={brands}
-                type="brand"
-                parentParams={searchParams}
-                title="Select Brand"
-                listAllLabel="List All Ads"
-            />
-          );
-      }
+  // Dinamik marka kontrolü (Eğer kategori isminde computer/laptop geçiyorsa)
+  const isComputer = categoryNode.slug.includes('computer') || categoryNode.slug.includes('laptop');
+
+  if (isComputer && !currentBrand) {
+      const brands = computerBrands.sort().map(b => ({ id: b, title: b, slug: b.toLowerCase() }));
+      return (
+        <GridDisplay
+            items={brands}
+            type="brand"
+            parentParams={searchParams}
+            title="Select Brand"
+            listAllLabel="List All Ads"
+        />
+      );
   }
 
   return null;
@@ -94,7 +95,7 @@ function GridDisplay({ items, type, parentParams, title, listAllLabel }: any) {
                 <ChevronRight size={16} className="text-indigo-600" />
               </div>
               <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mb-2 group-hover:bg-white group-hover:text-indigo-600 transition-colors text-gray-500 font-bold text-lg shadow-sm">
-                {item.title.charAt(0).toUpperCase()}
+                {item.title ? item.title.charAt(0).toUpperCase() : '?'}
               </div>
               <span className="font-bold text-gray-700 text-sm group-hover:text-indigo-700 line-clamp-2 leading-tight">
                 {item.title}
