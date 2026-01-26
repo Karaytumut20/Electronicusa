@@ -1,4 +1,4 @@
-import { Monitor, Smartphone, Camera, Tv, Gamepad2, Plug } from 'lucide-react';
+import { Monitor, Smartphone, Camera, Tv, Gamepad2 } from 'lucide-react';
 
 export type CategoryNode = {
   id: string;
@@ -12,50 +12,35 @@ export type CategoryNode = {
 
 export const categoryTree: CategoryNode[] = [
   {
-    id: 'bilgisayar', title: 'Bilgisayar', icon: 'Monitor', slug: 'bilgisayar',
+    id: 'computing', title: 'Computing', icon: 'Monitor', slug: 'computing',
     subs: [
-      { id: 'laptop', title: 'Laptop', slug: 'laptop', isDynamic: true, dynamicType: 'computer' },
-      { id: 'masaustu', title: 'Masaüstü', slug: 'masaustu' },
-      { id: 'tablet', title: 'Tablet', slug: 'tablet' },
-      { id: 'bilesenler', title: 'Bileşenler', slug: 'bilesenler' }
+      { id: 'laptops', title: 'Laptops', slug: 'laptops', isDynamic: true, dynamicType: 'computer' },
+      { id: 'desktops', title: 'Desktops', slug: 'desktops' },
+      { id: 'tablets', title: 'Tablets', slug: 'tablets' },
+      { id: 'components', title: 'PC Components', slug: 'components' }
     ]
   },
   {
-    id: 'telefon', title: 'Telefon', icon: 'Smartphone', slug: 'telefon',
+    id: 'phones', title: 'Phones', icon: 'Smartphone', slug: 'phones',
     subs: [
-      { id: 'cep-telefonu', title: 'Cep Telefonu', slug: 'cep-telefonu', isDynamic: true, dynamicType: 'phone' },
-      { id: 'aksesuar', title: 'Aksesuar', slug: 'telefon-aksesuar' }
+      { id: 'smartphones', title: 'Smartphones', slug: 'smartphones', isDynamic: true, dynamicType: 'phone' },
+      { id: 'accessories', title: 'Accessories', slug: 'cases' }
     ]
   },
   {
-    id: 'tv-ses', title: 'TV & Ses', icon: 'Tv', slug: 'tv-ses',
+    id: 'gaming', title: 'Gaming', icon: 'Gamepad2', slug: 'gaming',
     subs: [
-      { id: 'televizyon', title: 'Televizyon', slug: 'televizyon' },
-      { id: 'ses-sistemi', title: 'Ses Sistemi', slug: 'ses-sistemi' }
-    ]
-  },
-  {
-    id: 'kamera', title: 'Kamera', icon: 'Camera', slug: 'kamera',
-    subs: [
-      { id: 'fotograf', title: 'Fotoğraf Makinesi', slug: 'fotograf-makinesi' },
-      { id: 'drone', title: 'Drone', slug: 'drone' }
-    ]
-  },
-  {
-    id: 'oyun', title: 'Oyun & Konsol', icon: 'Gamepad2', slug: 'oyun',
-    subs: [
-      { id: 'konsol', title: 'Oyun Konsolu', slug: 'konsol' }
+      { id: 'consoles', title: 'Consoles', slug: 'consoles' }
     ]
   }
 ];
 
-// Araba verisi boşaltıldı
 export const carHierarchy: Record<string, Record<string, string[]>> = {};
 
 export const computerBrands = [
-  "Apple", "Asus", "Lenovo", "HP", "Dell", "Acer", "MSI", "Monster", "Casper", "Huawei", "Samsung", "Toshiba", "Microsoft"
+  "Apple", "Dell", "HP", "Lenovo", "Asus", "Acer", "MSI", "Razer", "Microsoft", "Samsung", "Toshiba"
 ];
 
 export const phoneBrands = [
-  "Apple", "Samsung", "Xiaomi", "Huawei", "Oppo", "Vivo", "Realme", "Honor", "General Mobile", "Tecno"
+  "Apple", "Samsung", "Google", "OnePlus", "Motorola", "Xiaomi", "Sony", "Nokia"
 ];

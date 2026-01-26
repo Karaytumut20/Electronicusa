@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Filter, RotateCcw, ChevronDown, ChevronUp, Search, Cpu, Monitor, HardDrive } from 'lucide-react';
+import { Filter, RotateCcw, ChevronDown, ChevronUp, Search, Cpu, Monitor } from 'lucide-react';
 import { computerBrands, phoneBrands } from '@/lib/hierarchyData';
 import { processors, ramOptions, screenSizes, gpuCapacities, ssdCapacities } from '@/lib/computerData';
 
@@ -42,10 +42,10 @@ export default function FilterSidebar() {
 
   const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
-  // Kategoriye göre marka listesi
+  // Brands logic
   const cat = filters.category || '';
   let activeBrands = computerBrands;
-  if (cat.includes('telefon') || cat.includes('cep')) activeBrands = phoneBrands;
+  if (cat.includes('phone') || cat.includes('mobile')) activeBrands = phoneBrands;
 
   const FilterSection = ({ id, title, icon: Icon, children }) => (
       <div className="border-b border-gray-100 py-4 last:border-0">
@@ -64,67 +64,60 @@ export default function FilterSidebar() {
 
       <div className="mb-6 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
         <h3 className="font-bold text-indigo-900 text-sm mb-3 flex items-center gap-2">
-            <Filter size={16} /> Filtrele
+            <Filter size={16} /> Filters
         </h3>
         <button onClick={applyFilters} className="w-full bg-indigo-600 text-white text-sm font-bold py-2.5 rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center gap-2">
-            <Search size={16} /> Sonuçları Göster
+            <Search size={16} /> Show Results
         </button>
         <button onClick={clearFilters} className="w-full text-center text-xs text-slate-500 hover:text-red-600 mt-2 flex items-center justify-center gap-1 font-medium transition-colors">
-            <RotateCcw size={12}/> Temizle
+            <RotateCcw size={12}/> Clear All
         </button>
       </div>
 
-      <FilterSection id="price" title="Fiyat Aralığı">
+      <FilterSection id="price" title="Price Range">
           <div className="flex gap-2 items-center">
-              <input type="number" placeholder="Min TL" value={filters.minPrice || ''} onChange={(e) => updateFilter('minPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+              <input type="number" placeholder="Min $" value={filters.minPrice || ''} onChange={(e) => updateFilter('minPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
               <span className="text-gray-400">-</span>
-              <input type="number" placeholder="Max TL" value={filters.maxPrice || ''} onChange={(e) => updateFilter('maxPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+              <input type="number" placeholder="Max $" value={filters.maxPrice || ''} onChange={(e) => updateFilter('maxPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
           </div>
       </FilterSection>
 
-      <FilterSection id="brand" title="Marka">
+      <FilterSection id="brand" title="Brand">
           <select value={filters.brand || ''} onChange={(e) => updateFilter('brand', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-              <option value="">Tümü</option>
+              <option value="">All Brands</option>
               {activeBrands.map(b => <option key={b} value={b}>{b}</option>)}
           </select>
       </FilterSection>
 
-      <FilterSection id="specs" title="Teknik Özellikler" icon={Cpu}>
+      <FilterSection id="specs" title="Technical Specs" icon={Cpu}>
           <div>
-              <label className="text-[10px] font-bold text-slate-500 mb-1 block">İŞLEMCİ</label>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">PROCESSOR</label>
               <select value={filters.processor || ''} onChange={(e) => updateFilter('processor', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Seçiniz</option>
+                  <option value="">Select</option>
                   {processors.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
           </div>
           <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1 block">RAM</label>
               <select value={filters.ram || ''} onChange={(e) => updateFilter('ram', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Seçiniz</option>
+                  <option value="">Select</option>
                   {ramOptions.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
           </div>
           <div>
-              <label className="text-[10px] font-bold text-slate-500 mb-1 block">DEPOLAMA (SSD)</label>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">STORAGE (SSD)</label>
               <select value={filters.ssd_capacity || ''} onChange={(e) => updateFilter('ssd_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Seçiniz</option>
+                  <option value="">Select</option>
                   {ssdCapacities.map(s => <option key={s} value={s}>{s}</option>)}
-              </select>
-          </div>
-          <div>
-              <label className="text-[10px] font-bold text-slate-500 mb-1 block">EKRAN KARTI</label>
-              <select value={filters.gpu_capacity || ''} onChange={(e) => updateFilter('gpu_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Seçiniz</option>
-                  {gpuCapacities.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
           </div>
       </FilterSection>
 
-      <FilterSection id="screen" title="Ekran" icon={Monitor}>
+      <FilterSection id="screen" title="Screen" icon={Monitor}>
           <div>
-              <label className="text-[10px] font-bold text-slate-500 mb-1 block">EKRAN BOYUTU</label>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">SCREEN SIZE</label>
               <select value={filters.screen_size || ''} onChange={(e) => updateFilter('screen_size', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Seçiniz</option>
+                  <option value="">Select</option>
                   {screenSizes.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
           </div>

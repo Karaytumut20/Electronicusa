@@ -1,21 +1,13 @@
 export const cities = [
-  { name: 'İstanbul', districts: ['Kadıköy', 'Beşiktaş', 'Üsküdar', 'Şişli', 'Maltepe', 'Kartal', 'Pendik', 'Ümraniye', 'Ataşehir', 'Beylikdüzü', 'Esenyurt', 'Fatih', 'Bakırköy'] },
-  { name: 'Ankara', districts: ['Çankaya', 'Keçiören', 'Yenimahalle', 'Mamak', 'Etimesgut', 'Sincan', 'Altındağ', 'Pursaklar', 'Gölbaşı'] },
-  { name: 'İzmir', districts: ['Karşıyaka', 'Konak', 'Bornova', 'Buca', 'Çiğli', 'Gaziemir', 'Balçova', 'Narlıdere', 'Urla', 'Çeşme'] },
-  { name: 'Antalya', districts: ['Muratpaşa', 'Kepez', 'Konyaaltı', 'Alanya', 'Manavgat', 'Serik', 'Kemer', 'Kaş'] },
-  { name: 'Bursa', districts: ['Nilüfer', 'Osmangazi', 'Yıldırım', 'Mudanya', 'İnegöl', 'Gemlik'] },
-  { name: 'Adana', districts: ['Seyhan', 'Çukurova', 'Yüreğir', 'Sarıçam'] },
-  { name: 'Kocaeli', districts: ['İzmit', 'Gebze', 'Darıca', 'Gölcük', 'Körfez', 'Derince', 'Kartepe', 'Başiskele', 'Karamürsel'] },
-  { name: 'Konya', districts: ['Selçuklu', 'Meram', 'Karatay'] },
-  { name: 'Gaziantep', districts: ['Şahinbey', 'Şehitkamil'] },
-  { name: 'Mersin', districts: ['Yenişehir', 'Mezitli', 'Akdeniz', 'Toroslar', 'Erdemli'] },
-  { name: 'Eskişehir', districts: ['Odunpazarı', 'Tepebaşı'] },
-  { name: 'Samsun', districts: ['Atakum', 'İlkadım', 'Canik'] },
-  { name: 'Kayseri', districts: ['Melikgazi', 'Kocasinan', 'Talas'] },
-  { name: 'Sakarya', districts: ['Adapazarı', 'Serdivan', 'Erenler'] },
-  { name: 'Muğla', districts: ['Bodrum', 'Fethiye', 'Marmaris', 'Menteşe', 'Milas'] },
-  { name: 'Trabzon', districts: ['Ortahisar', 'Akçaabat', 'Yomra'] }
-].sort((a, b) => a.name.localeCompare(b.name));
+  { name: 'New York', districts: ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island'] },
+  { name: 'California', districts: ['Los Angeles', 'San Francisco', 'San Diego', 'San Jose', 'Sacramento'] },
+  { name: 'Texas', districts: ['Houston', 'Austin', 'Dallas', 'San Antonio', 'Fort Worth'] },
+  { name: 'Florida', districts: ['Miami', 'Orlando', 'Tampa', 'Jacksonville', 'Tallahassee'] },
+  { name: 'Illinois', districts: ['Chicago', 'Houston', 'Phoenix', 'Philadelphia', 'San Antonio'] },
+  { name: 'Washington', districts: ['Seattle', 'Spokane', 'Tacoma', 'Vancouver', 'Bellevue'] },
+  { name: 'Nevada', districts: ['Las Vegas', 'Henderson', 'Reno', 'North Las Vegas', 'Sparks'] },
+  { name: 'Massachusetts', districts: ['Chicago', 'Aurora', 'Naperville', 'Joliet', 'Rockford'] }
+];
 
 export const getDistricts = (cityName: string) => {
   const city = cities.find(c => c.name === cityName);

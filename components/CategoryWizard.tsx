@@ -22,7 +22,6 @@ export default function CategoryWizard() {
   const [isBrandSelection, setIsBrandSelection] = useState(false);
 
   const handleSelect = (item) => {
-    // 1. Dinamik Marka Seçimi (Bilgisayar veya Telefon)
     if (item.isDynamic) {
         setIsBrandSelection(true);
         setHistory([...history, currentList]);
@@ -42,15 +41,13 @@ export default function CategoryWizard() {
         return;
     }
 
-    // 2. Marka Seçildiyse -> Bitiş
     if (isBrandSelection) {
         const brand = item.title;
         const finalPath = [...selectedPath, brand].join(' > ');
-        router.push(`/ilan-ver/detay?cat=${selectedPath[0]?.toLowerCase().includes('bilgisayar') ? 'laptop' : 'cep-telefonu'}&path=${encodeURIComponent(finalPath)}&brand=${encodeURIComponent(brand)}`);
+        router.push(`/ilan-ver/detay?cat=${selectedPath[0]?.toLowerCase().includes('computing') ? 'laptops' : 'smartphones'}&path=${encodeURIComponent(finalPath)}&brand=${encodeURIComponent(brand)}`);
         return;
     }
 
-    // 3. Normal Kategori Gezinimi
     const newPath = [...selectedPath, item.title];
 
     if (item.subs && item.subs.length > 0) {
@@ -81,11 +78,8 @@ export default function CategoryWizard() {
         )}
         <div>
           <h2 className="text-xl font-bold text-slate-900">
-            {history.length === 0 ? 'Elektronik Kategori Seçimi' : selectedPath[selectedPath.length - 1] || 'Seçim Yapınız'}
+            {history.length === 0 ? 'Select Category' : selectedPath[selectedPath.length - 1] || 'Make a selection'}
           </h2>
-          <p className="text-sm text-slate-500">
-            {history.length === 0 ? 'Satmak istediğiniz ürünün kategorisini seçin.' : selectedPath.join(' > ')}
-          </p>
         </div>
       </div>
 
@@ -100,17 +94,14 @@ export default function CategoryWizard() {
               onClick={() => handleSelect(item)}
               className="group relative flex items-center p-5 bg-white border border-gray-200 rounded-xl hover:border-indigo-500 hover:shadow-md transition-all duration-200 text-left"
             >
-              <div className={`w-14 h-14 rounded-lg flex items-center justify-center mr-4 transition-colors shrink-0 ${history.length === 0 ? 'bg-indigo-50 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white' : 'bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-700'}`}>
+              <div className="w-14 h-14 rounded-lg flex items-center justify-center mr-4 bg-gray-100 text-gray-500 group-hover:bg-indigo-100 group-hover:text-indigo-700">
                 {history.length === 0 && Icon ? Icon : (isLeaf ? <CheckCircle2 size={24} className="text-green-600" /> : <div className="text-sm font-bold opacity-50">{item.title.substring(0,2).toUpperCase()}</div>)}
               </div>
               <div className="flex-1 min-w-0">
                 <span className="block font-bold text-slate-700 group-hover:text-indigo-900 text-base mb-0.5 truncate">{item.title}</span>
                 <span className="text-xs text-slate-400 group-hover:text-indigo-500 font-medium">
-                    {isLeaf ? 'Seç ve Devam Et' : 'Alt Kategorileri Gör'}
+                    {isLeaf ? 'Select' : 'View Subcategories'}
                 </span>
-              </div>
-              <div className="absolute right-4 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:translate-x-1">
-                {isLeaf ? <CheckCircle2 size={20} className="text-green-500" /> : <ChevronRight size={20} className="text-indigo-400" />}
               </div>
             </button>
           );

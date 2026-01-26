@@ -13,17 +13,17 @@ export default function FeaturesTab({ ad }) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-       <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-4 border-b pb-2">Teknik Özellikler</h4>
+       <h4 className="font-bold text-gray-800 text-sm uppercase tracking-wider mb-4 border-b pb-2">Technical Specifications</h4>
        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-1">
-          {renderRow('Marka', ad.brand)}
+          {renderRow('Brand', ad.brand)}
           {renderRow('Model', ad.model)}
-          {renderRow('İşlemci', ad.processor)}
+          {renderRow('Processor', ad.processor)}
           {renderRow('RAM', ad.ram)}
-          {renderRow('Ekran', ad.screen_size)}
-          {renderRow('Ekran Kartı', ad.gpu_capacity)}
-          {renderRow('Depolama', ad.ssd_capacity)}
-          {renderRow('Çözünürlük', ad.resolution)}
-          {renderRow('Kategori', ad.category)}
+          {renderRow('Screen Size', ad.screen_size)}
+          {renderRow('Graphics', ad.gpu_capacity)}
+          {renderRow('Storage', ad.ssd_capacity)}
+          {renderRow('Resolution', ad.resolution)}
+          {renderRow('Category', ad.category)}
        </div>
     </div>
   );

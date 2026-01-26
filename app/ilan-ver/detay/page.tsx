@@ -1,7 +1,7 @@
 "use client";
 import React, { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, ArrowLeft, Info, MapPin, Camera, Cpu } from 'lucide-react';
+import { Loader2, ArrowLeft, Info, MapPin, Camera, Sparkles, Save, Cpu } from 'lucide-react';
 import { useToast } from '@/context/ToastContext';
 import { useAuth } from '@/context/AuthContext';
 import ComputerFields from '@/components/form/ComputerFields';
@@ -20,7 +20,7 @@ function PostAdFormContent() {
   const { user } = useAuth();
 
   const categorySlug = searchParams.get('cat') || '';
-  const categoryPath = searchParams.get('path') || 'Kategori Seçilmedi';
+  const categoryPath = searchParams.get('path') || 'No Category Selected';
   const urlBrand = searchParams.get('brand') || '';
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -29,7 +29,7 @@ function PostAdFormContent() {
   const [districts, setDistricts] = useState([]);
 
   const [formData, setFormData] = useState({
-    title: '', description: '', price: '', currency: 'TL', city: '', district: '',
+    title: '', description: '', price: '', currency: 'USD', city: '', district: '',
     brand: urlBrand,
     processor: '', ram: '', screen_size: '', gpu_capacity: '', resolution: '', ssd_capacity: ''
   });
@@ -69,7 +69,7 @@ function PostAdFormContent() {
         const fieldErrors = {};
         result.error.issues.forEach(issue => { fieldErrors[issue.path[0]] = issue.message; });
         setErrors(fieldErrors);
-        addToast('Lütfen zorunlu alanları doldurunuz.', 'error');
+        addToast('Please fill in required fields.', 'error');
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
@@ -78,7 +78,7 @@ function PostAdFormContent() {
     const res = await createAdAction(rawData);
     if (res.error) { addToast(res.error, 'error'); }
     else {
-        addToast('İlan başarıyla yayınlandı!', 'success');
+        addToast('Ad published successfully!', 'success');
         router.push('/ilan-ver/basarili');
     }
     setIsSubmitting(false);
@@ -89,25 +89,25 @@ function PostAdFormContent() {
       <div className="flex-1">
         <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-6 flex items-center justify-between">
           <div>
-            <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-1">Seçilen Kategori</p>
+            <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-1">Category</p>
             <h1 className="text-sm md:text-base font-bold text-indigo-900">{categoryPath}</h1>
           </div>
-          <button onClick={() => router.push('/ilan-ver')} className="text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 hover:border-indigo-300 transition-colors">Değiştir</button>
+          <button onClick={() => router.push('/ilan-ver')} className="text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 hover:border-indigo-300 transition-colors">Change</button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Info className="text-indigo-500" size={20}/> Temel Bilgiler</h3>
+             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Info className="text-indigo-500" size={20}/> Basic Information</h3>
              <div className="space-y-5">
-               <Input label="İlan Başlığı" name="title" placeholder="Örn: Macbook Pro M1, Çiziksiz..." value={formData.title} onChange={handleInputChange} error={errors.title} />
-               <Textarea label="İlan Açıklaması" name="description" placeholder="Ürünün durumu hakkında bilgi verin..." value={formData.description} onChange={handleInputChange} className="h-32" error={errors.description} />
+               <Input label="Ad Title" name="title" placeholder="Ex: Macbook Pro M1, Like New..." value={formData.title} onChange={handleInputChange} error={errors.title} />
+               <Textarea label="Description" name="description" placeholder="Describe your product..." value={formData.description} onChange={handleInputChange} className="h-32" error={errors.description} />
                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                 <Input label="Fiyat" name="price" type="number" placeholder="0" value={formData.price} onChange={handleInputChange} error={errors.price} />
+                 <Input label="Price" name="price" type="number" placeholder="0" value={formData.price} onChange={handleInputChange} error={errors.price} />
                  <div>
-                   <label className="block text-[11px] font-bold text-gray-600 mb-1">Para Birimi</label>
+                   <label className="block text-[11px] font-bold text-gray-600 mb-1">Currency</label>
                    <select name="currency" value={formData.currency} onChange={handleInputChange} className="w-full h-10 border border-gray-300 rounded-sm px-2 text-sm bg-white outline-none">
-                     <option value="TL">TL</option><option value="USD">USD</option><option value="EUR">EUR</option>
+                     <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
                    </select>
                  </div>
                </div>
@@ -116,27 +116,25 @@ function PostAdFormContent() {
 
           <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Cpu className="text-orange-500" size={20}/> Teknik Özellikler</h3>
-             {/* DynamicChange props olarak gönderildi */}
+             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Cpu className="text-orange-500" size={20}/> Tech Specs</h3>
              <ComputerFields data={formData} onChange={handleDynamicChange} categorySlug={categorySlug} />
           </section>
 
           <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin className="text-green-500" size={20}/> Konum</h3>
+             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin className="text-green-500" size={20}/> Location</h3>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                <div>
-                 <label className="block text-[11px] font-bold text-gray-600 mb-1">İl <span className="text-red-500">*</span></label>
+                 <label className="block text-[11px] font-bold text-gray-600 mb-1">State / City</label>
                  <select name="city" onChange={handleInputChange} value={formData.city} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg outline-none text-sm">
-                    <option value="">Seçiniz</option>
-                    {/* HATA BURADA DUZELTILDI: c.name */}
+                    <option value="">Select</option>
                     {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                  </select>
                </div>
                <div>
-                 <label className="block text-[11px] font-bold text-gray-600 mb-1">İlçe <span className="text-red-500">*</span></label>
+                 <label className="block text-[11px] font-bold text-gray-600 mb-1">District / Area</label>
                  <select name="district" value={formData.district} onChange={handleInputChange} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg outline-none text-sm" disabled={!formData.city}>
-                    <option value="">Seçiniz</option>
+                    <option value="">Select</option>
                     {districts.map(d => <option key={d} value={d}>{d}</option>)}
                  </select>
                </div>
@@ -145,13 +143,13 @@ function PostAdFormContent() {
 
           <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
              <div className="absolute top-0 left-0 w-1 h-full bg-pink-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Camera className="text-pink-500" size={20}/> Fotoğraflar</h3>
+             <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Camera className="text-pink-500" size={20}/> Photos</h3>
              <ImageUploader onImagesChange={setImages} initialImages={images} />
           </section>
 
           <div className="flex justify-end pt-4">
              <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50">
-                {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : 'İlanı Yayınla'}
+                {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : 'Publish Ad'}
              </button>
           </div>
         </form>

@@ -2,51 +2,44 @@ import { Monitor, Smartphone, Camera, Tv, Gamepad2, Plug, Cpu, Laptop, Watch, He
 
 export const categories = [
   {
-    id: 'bilgisayar', title: 'Bilgisayar', icon: 'Monitor', slug: 'bilgisayar',
+    id: 'computing', title: 'Computing', icon: 'Monitor', slug: 'computing',
     subs: [
-      { id: 'laptop', title: 'Laptop / Notebook', slug: 'laptop', icon: 'Laptop' },
-      { id: 'masaustu', title: 'Masaüstü PC', slug: 'masaustu', icon: 'Monitor' },
-      { id: 'tablet', title: 'Tablet', slug: 'tablet', icon: 'Tablet' },
-      { id: 'bilesenler', title: 'PC Bileşenleri', slug: 'bilesenler', icon: 'Cpu' },
-      { id: 'ekipman', title: 'Oyuncu Ekipmanları', slug: 'oyuncu-ekipman', icon: 'Keyboard' }
+      { id: 'laptops', title: 'Laptops', slug: 'laptops', icon: 'Laptop' },
+      { id: 'desktops', title: 'Desktops', slug: 'desktops', icon: 'Monitor' },
+      { id: 'tablets', title: 'Tablets', slug: 'tablets', icon: 'Tablet' },
+      { id: 'components', title: 'Components', slug: 'components', icon: 'Cpu' },
+      { id: 'networking', title: 'Networking', slug: 'networking', icon: 'Wifi' }
     ]
   },
   {
-    id: 'telefon', title: 'Telefon & Aksesuar', icon: 'Smartphone', slug: 'telefon',
+    id: 'phones', title: 'Phones & Accessories', icon: 'Smartphone', slug: 'phones',
     subs: [
-      { id: 'cep', title: 'Cep Telefonu', slug: 'cep-telefonu', icon: 'Smartphone' },
-      { id: 'giyilebilir', title: 'Akıllı Saat', slug: 'giyilebilir', icon: 'Watch' },
-      { id: 'kilif', title: 'Kılıf & Koruyucu', slug: 'kilif', icon: 'Shield' }
+      { id: 'smartphones', title: 'Smartphones', slug: 'smartphones', icon: 'Smartphone' },
+      { id: 'wearables', title: 'Smart Watches', slug: 'wearables', icon: 'Watch' },
+      { id: 'cases', title: 'Cases & Protection', slug: 'cases', icon: 'Shield' }
     ]
   },
   {
-    id: 'oyun', title: 'Oyun & Konsol', icon: 'Gamepad2', slug: 'oyun',
+    id: 'gaming', title: 'Gaming', icon: 'Gamepad2', slug: 'gaming',
     subs: [
-      { id: 'konsol', title: 'Oyun Konsolları', slug: 'konsol', icon: 'Gamepad2' },
-      { id: 'oyunlar', title: 'Oyunlar', slug: 'video-oyun', icon: 'Disc' }
+      { id: 'consoles', title: 'Consoles', slug: 'consoles', icon: 'Gamepad2' },
+      { id: 'games', title: 'Video Games', slug: 'games', icon: 'Disc' },
+      { id: 'accessories', title: 'Accessories', slug: 'gaming-accessories', icon: 'Keyboard' }
     ]
   },
   {
-    id: 'tv-ses', title: 'TV & Ses', icon: 'Tv', slug: 'tv-ses',
+    id: 'audio', title: 'TV & Audio', icon: 'Tv', slug: 'audio-video',
     subs: [
-      { id: 'tv', title: 'Televizyon', slug: 'televizyon', icon: 'Tv' },
-      { id: 'kulaklik', title: 'Kulaklık', slug: 'kulaklik', icon: 'Headphones' },
-      { id: 'hoparlor', title: 'Hoparlör', slug: 'hoparlor', icon: 'Speaker' }
+      { id: 'tvs', title: 'Televisions', slug: 'tvs', icon: 'Tv' },
+      { id: 'headphones', title: 'Headphones', slug: 'headphones', icon: 'Headphones' },
+      { id: 'speakers', title: 'Speakers', slug: 'speakers', icon: 'Speaker' }
     ]
   },
   {
-    id: 'kamera', title: 'Kamera', icon: 'Camera', slug: 'kamera',
+    id: 'cameras', title: 'Cameras', icon: 'Camera', slug: 'cameras',
     subs: [
-      { id: 'dslr', title: 'Dijital Kamera', slug: 'dslr', icon: 'Camera' },
-      { id: 'drone', title: 'Drone', slug: 'drone', icon: 'Plane' }
-    ]
-  },
-  {
-    id: 'akilli-ev', title: 'Akıllı Ev', icon: 'Zap', slug: 'akilli-ev',
-    subs: [
-        { id: 'robot', title: 'Robot Süpürge', slug: 'robot-supurge', icon: 'Bot' }
+      { id: 'digital', title: 'Digital Cameras', slug: 'digital-cameras', icon: 'Camera' },
+      { id: 'drones', title: 'Drones', slug: 'drones', icon: 'Plane' }
     ]
   }
 ];
-
-export const cities = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Kocaeli', 'Adana', 'Eskişehir'];
