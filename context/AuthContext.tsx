@@ -31,7 +31,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).single();
 
         if (error) {
-            console.warn("Profil çekilemedi, varsayılan değerler kullanılıyor:", error.message);
+            console.warn("Profil çekilemedi (İlk giriş olabilir):", error.message);
         }
 
         setUser({
@@ -43,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         });
       } catch (err) {
           console.error("fetchProfile hatası:", err);
-          // Hata olsa bile kullanıcıyı en azından email ile set et
+          // Hata durumunda temel kullanıcı verisiyle devam et
           setUser({
             id: sessionUser.id,
             email: sessionUser.email!,
@@ -58,8 +58,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const checkUser = async () => {
       try {
-        // Zaman aşımı ekleyelim (5 saniye içinde yanıt gelmezse vazgeç)
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 5000));
+        // Timeout 10 saniyeye çıkarıldı
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Auth Timeout')), 10000));
         const sessionPromise = supabase.auth.getSession();
 
         const { data: { session } } : any = await Promise.race([sessionPromise, timeoutPromise]);
@@ -68,9 +68,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await fetchProfile(session.user);
         }
       } catch (error) {
-        console.error("Auth Check Error:", error);
+        console.warn("Auth Check Warning:", error);
+        // Hata olsa bile kullanıcıyı null set ederek uygulamanın açılmasını sağla
+        if(mounted) setUser(null);
       } finally {
-        if (mounted) setLoading(false); // NE OLURSA OLSUN LOADING KAPATILIR
+        if (mounted) setLoading(false);
       }
     };
 
