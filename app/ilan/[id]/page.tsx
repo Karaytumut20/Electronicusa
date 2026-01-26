@@ -1,6 +1,7 @@
 import React from 'react';
 import { notFound } from 'next/navigation';
 import { getAdDetailServer } from '@/lib/actions';
+import { createClient } from '@/lib/supabase/server';
 import Breadcrumb from '@/components/Breadcrumb';
 import Gallery from '@/components/Gallery';
 import MobileAdActionBar from '@/components/MobileAdActionBar';
@@ -14,12 +15,35 @@ import TechnicalSpecsTab from '@/components/AdDetail/TechnicalSpecsTab';
 import ViewTracker from '@/components/ViewTracker';
 import LiveVisitorCount from '@/components/LiveVisitorCount';
 import Badge from '@/components/ui/Badge';
-import { Eye, MapPin, Calendar, Tag, AlertTriangle } from 'lucide-react';
+import { Eye, MapPin, Calendar, Tag, AlertTriangle, Clock } from 'lucide-react';
 
 export default async function AdDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ad = await getAdDetailServer(Number(id));
+
   if (!ad) return notFound();
+
+  // --- GÜVENLİK KONTROLÜ BAŞLANGIÇ ---
+  // İlan yayında değilse (onay bekliyor, pasif vb.), sadece ilan sahibi veya admin görebilir.
+  if (ad.status !== 'yayinda') {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      const isOwner = user && user.id === ad.user_id;
+      let isAdmin = false;
+
+      if (user) {
+          // Kullanıcı admin mi kontrol et
+          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
+          if (profile?.role === 'admin') isAdmin = true;
+      }
+
+      // Eğer ne ilan sahibi ne de admin ise, sayfa bulunamadı (404) döndür.
+      if (!isOwner && !isAdmin) {
+          return notFound();
+      }
+  }
+  // --- GÜVENLİK KONTROLÜ BİTİŞ ---
 
   const formattedPrice = ad.price?.toLocaleString('en-US');
   const location = `${ad.city || ''}, ${ad.district || ''}`;
@@ -49,6 +73,25 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <Breadcrumb items={breadcrumbItems} />
+
+        {/* Uyarı Barı: İlan Sahibi veya Admin için, eğer ilan yayında değilse bilgi ver */}
+        {ad.status !== 'yayinda' && (
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
+                <div className="flex items-center">
+                    <div className="flex-shrink-0">
+                        <Clock className="h-5 w-5 text-yellow-600" />
+                    </div>
+                    <div className="ml-3">
+                        <p className="text-sm font-bold text-yellow-800">
+                            This ad is currently {ad.status === 'onay_bekliyor' ? 'Pending Approval' : 'Inactive'}.
+                        </p>
+                        <p className="text-xs text-yellow-700 mt-1">
+                            Only you (the owner) and administrators can see this page. It is not publicly accessible.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )}
 
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>

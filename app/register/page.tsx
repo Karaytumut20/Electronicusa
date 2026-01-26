@@ -17,13 +17,15 @@ export default function RegisterPage() {
     setLoading(true);
 
     const cleanPhone = form.phone.replace(/\s/g, '');
+    const fullName = `${form.name} ${form.surname}`.trim();
 
+    // 1. Sign Up
     const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
         data: {
-          full_name: `${form.name} ${form.surname}`,
+          full_name: fullName,
           phone: cleanPhone,
         },
       },
@@ -32,12 +34,21 @@ export default function RegisterPage() {
     if (error) {
       addToast(error.message, 'error');
     } else {
-      // Ensure profile exists
+      // 2. Explicitly Create Profile (Upsert to be safe)
       if (data.user) {
-          await supabase.from('profiles').update({
+          const { error: profileError } = await supabase.from('profiles').upsert({
+              id: data.user.id,
+              email: form.email,
+              full_name: fullName,
               phone: cleanPhone,
+              role: 'user',
               show_phone: false
-          }).eq('id', data.user.id);
+          });
+
+          if (profileError) {
+              console.error("Profile creation failed:", profileError);
+              // Don't block registration success, but log it.
+          }
       }
 
       addToast('Registration successful! You can now login.', 'success');
@@ -56,11 +67,11 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-[12px] font-bold text-[#333] mb-1">Name</label>
-                <input type="text" onChange={e => setForm({...form, name: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-blue-500 outline-none text-sm" required />
+                <input type="text" onChange={e => setForm({...form, name: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
               </div>
               <div>
                 <label className="block text-[12px] font-bold text-[#333] mb-1">Surname</label>
-                <input type="text" onChange={e => setForm({...form, surname: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-blue-500 outline-none text-sm" required />
+                <input type="text" onChange={e => setForm({...form, surname: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
               </div>
             </div>
 
@@ -70,7 +81,7 @@ export default function RegisterPage() {
                 type="tel"
                 placeholder="+1 555..."
                 onChange={e => setForm({...form, phone: e.target.value})}
-                className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-blue-500 outline-none text-sm"
+                className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm"
                 required
               />
               <p className="text-[10px] text-gray-500 mt-1">* Required for communication with buyers.</p>
@@ -78,22 +89,22 @@ export default function RegisterPage() {
 
             <div>
               <label className="block text-[12px] font-bold text-[#333] mb-1">Email</label>
-              <input type="email" onChange={e => setForm({...form, email: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-blue-500 outline-none text-sm" required />
+              <input type="email" onChange={e => setForm({...form, email: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
             </div>
 
             <div>
               <label className="block text-[12px] font-bold text-[#333] mb-1">Password</label>
-              <input type="password" onChange={e => setForm({...form, password: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-blue-500 outline-none text-sm" required />
+              <input type="password" onChange={e => setForm({...form, password: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
             </div>
 
-            <button disabled={loading} className="w-full bg-blue-700 text-white font-bold h-[44px] rounded-sm hover:bg-blue-800 transition-colors shadow-sm mt-4 text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+            <button disabled={loading} className="w-full bg-indigo-600 text-white font-bold h-[44px] rounded-sm hover:bg-indigo-700 transition-colors shadow-sm mt-4 text-sm disabled:opacity-50 flex items-center justify-center gap-2">
               {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
             </button>
           </form>
 
           <div className="mt-6 text-center">
             <span className="text-[12px] text-gray-500">Already a member? </span>
-            <Link href="/login" className="text-blue-700 font-bold text-[12px] hover:underline">Login</Link>
+            <Link href="/login" className="text-indigo-600 font-bold text-[12px] hover:underline">Login</Link>
           </div>
         </div>
       </div>

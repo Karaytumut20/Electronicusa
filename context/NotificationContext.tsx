@@ -23,7 +23,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   const { addToast } = useToast();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // 1. İlk Yükleme
+  // 1. Initial Load
   useEffect(() => {
     if (user) {
       getNotificationsClient(user.id).then(setNotifications);
@@ -32,7 +32,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
     }
   }, [user]);
 
-  // 2. Realtime Dinleyici (Senior Upgrade)
+  // 2. Realtime Listener
   useEffect(() => {
     if (!user) return;
 
@@ -42,12 +42,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
         (payload) => {
-          // Yeni bildirim geldiğinde listeye ekle
           const newNotif = payload.new as Notification;
           setNotifications((prev) => [newNotif, ...prev]);
-
-          // Opsiyonel: Ses çal veya Browser bildirimi gönder
-          // addToast(`Yeni Bildirim: ${newNotif.title}`, 'info');
+          addToast(newNotif.title, 'info');
         }
       )
       .subscribe();
@@ -61,7 +58,6 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
 
   const addNotification = async (title: string, message: string) => {
     if (!user) return;
-    // Client-side optimistic update yerine direkt DB'ye yazıyoruz, Realtime zaten güncelleyecek
     await createNotificationClient(user.id, title, message);
   };
 
@@ -76,11 +72,10 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
   };
 
   const saveSearch = async (url: string, name: string) => {
-    if (!user) { addToast('Giriş yapmalısınız.', 'error'); return; }
-    // Gerçek kayıt işlemi services.ts üzerinden yapılmalı, burada sadece bildirim simülasyonu
-    // saveSearchClient(...) çağrılabilir.
-    await addNotification('Arama Kaydedildi', `"${name}" aramanız başarıyla kaydedildi.`);
-    addToast('Arama kaydedildi.', 'success');
+    if (!user) { addToast('Please login to save search.', 'error'); return; }
+    // Simulated save search action (real one should be in services)
+    await addNotification('Search Saved', `"${name}" has been saved to your dashboard.`);
+    addToast('Search saved successfully.', 'success');
   }
 
   return (
