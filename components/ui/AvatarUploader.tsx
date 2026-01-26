@@ -18,23 +18,21 @@ export default function AvatarUploader({ currentImage, onImageChange }: AvatarUp
     if (!e.target.files?.length) return;
     const file = e.target.files[0];
 
-    // Boyut kontrolü (2MB)
     if (file.size > 2 * 1024 * 1024) {
-      addToast('Dosya boyutu 2MB\'tan küçük olmalıdır.', 'error');
+      addToast('File size must be less than 2MB.', 'error');
       return;
     }
 
     setUploading(true);
     try {
       const publicUrl = await uploadImageClient(file);
-      onImageChange(publicUrl); // Sadece yükleme bitince üst bileşene haber ver
-      addToast('Profil fotoğrafı yüklendi.', 'success');
+      onImageChange(publicUrl);
+      addToast('Profile photo updated.', 'success');
     } catch (error: any) {
       console.error(error);
-      addToast('Yükleme sırasında hata oluştu.', 'error');
+      addToast('Upload failed.', 'error');
     } finally {
       setUploading(false);
-      // Inputu temizle ki aynı dosyayı tekrar seçebilelim
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
@@ -50,7 +48,6 @@ export default function AvatarUploader({ currentImage, onImageChange }: AvatarUp
         className="relative group cursor-pointer"
         onClick={() => !uploading && fileInputRef.current?.click()}
       >
-        {/* Avatar Dairesi */}
         <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-gray-100 flex items-center justify-center relative">
           {uploading ? (
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin" />
@@ -60,7 +57,6 @@ export default function AvatarUploader({ currentImage, onImageChange }: AvatarUp
             <User className="w-12 h-12 text-gray-400" />
           )}
 
-          {/* Hover Overlay */}
           {!uploading && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
               <Camera className="w-8 h-8 text-white/90" />
@@ -68,12 +64,11 @@ export default function AvatarUploader({ currentImage, onImageChange }: AvatarUp
           )}
         </div>
 
-        {/* Silme Butonu (Sadece resim varsa) */}
         {!uploading && currentImage && (
           <button
             onClick={handleRemove}
             className="absolute top-0 right-0 p-2 bg-red-500 text-white rounded-full shadow-md hover:bg-red-600 transition-transform hover:scale-110 z-10"
-            title="Fotoğrafı Kaldır"
+            title="Remove Photo"
           >
             <Trash2 size={14} />
           </button>
@@ -90,9 +85,9 @@ export default function AvatarUploader({ currentImage, onImageChange }: AvatarUp
 
       <div className="text-center">
         <p className="text-xs font-bold text-indigo-900 cursor-pointer hover:underline" onClick={() => fileInputRef.current?.click()}>
-          Fotoğrafı Değiştir
+          Change Photo
         </p>
-        <p className="text-[10px] text-gray-400 mt-1">Maks. 2MB (JPG, PNG)</p>
+        <p className="text-[10px] text-gray-400 mt-1">Max 2MB (JPG, PNG)</p>
       </div>
     </div>
   );

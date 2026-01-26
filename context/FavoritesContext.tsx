@@ -2,10 +2,10 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { toggleFavoriteClient, getFavoritesClient } from '@/lib/services';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/context/ToastContext'; // EKLENDİ: Uyarı mesajları için
+import { useToast } from '@/context/ToastContext';
 
 type FavoritesContextType = {
-  favorites: number[]; // Sadece ilan ID'lerini tutar
+  favorites: number[]; // Stores only ad IDs
   toggleFavorite: (id: number) => void;
   isFavorite: (id: number) => boolean;
 };
@@ -18,7 +18,7 @@ const FavoritesContext = createContext<FavoritesContextType>({
 
 export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
-  const { addToast } = useToast(); // Toast hook'unu çağır
+  const { addToast } = useToast();
   const [favorites, setFavorites] = useState<number[]>([]);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
     if (user) {
       getFavoritesClient(user.id).then(ads => {
         if (isMounted && ads) {
-            // Null olmayan ve geçerli ID'si olan ilanları filtrele
+            // Filter non-null and valid IDs
             const validIds = ads
               .filter((ad: any) => ad && typeof ad.id === 'number')
               .map((ad: any) => ad.id);
@@ -40,30 +40,30 @@ export function FavoritesProvider({ children }: { children: React.ReactNode }) {
   }, [user]);
 
   const toggleFavorite = async (id: number) => {
-    // 1. KULLANICI KONTROLÜ
+    // 1. USER CHECK
     if (!user) {
-        addToast('Favorilere eklemek için lütfen giriş yapın.', 'error');
+        addToast('Please login to add to favorites.', 'error');
         return;
     }
 
-    // 2. OPTIMISTIC UPDATE (Arayüzde anında tepki)
+    // 2. OPTIMISTIC UPDATE (Instant UI feedback)
     const isAlreadyFav = favorites.includes(id);
     if (isAlreadyFav) {
         setFavorites(prev => prev.filter(fid => fid !== id));
-        addToast('Favorilerden çıkarıldı.', 'info');
+        addToast('Removed from favorites.', 'info');
     } else {
         setFavorites(prev => [...prev, id]);
-        addToast('Favorilere eklendi.', 'success');
+        addToast('Added to favorites.', 'success');
     }
 
-    // 3. BACKEND SENKRONİZASYONU
+    // 3. BACKEND SYNC
     try {
       await toggleFavoriteClient(user.id, id);
     } catch (error) {
-      console.error("Favori işlemi başarısız:", error);
-      addToast('İşlem sırasında bir hata oluştu.', 'error');
+      console.error("Favorite action failed:", error);
+      addToast('An error occurred.', 'error');
 
-      // Hata olursa işlemi geri al (Revert)
+      // Revert on error
       if (isAlreadyFav) setFavorites(prev => [...prev, id]);
       else setFavorites(prev => prev.filter(fid => fid !== id));
     }

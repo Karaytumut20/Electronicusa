@@ -1,14 +1,15 @@
-import React from 'react';
-import CategoryWizard from '@/components/CategoryWizard';
+"use client";
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { Loader2 } from 'lucide-react';
 
-export default function PostAdCategoryPage() {
+export default function LegacyPostAdRedirect() {
+  const router = useRouter();
+  useEffect(() => { router.replace('/post-ad'); }, [router]);
   return (
-    <div className="max-w-[800px] mx-auto py-10 px-4">
-      <div className="mb-8 text-center">
-        <h1 className="text-2xl font-bold text-[#333] mb-2">Post Free Ad</h1>
-        <p className="text-gray-500 text-sm">Select the correct category step by step to reach the right audience.</p>
-      </div>
-      <CategoryWizard />
+    <div className="flex flex-col items-center justify-center min-h-[50vh]">
+      <Loader2 className="animate-spin text-indigo-600 mb-2" size={32}/>
+      <p className="text-gray-500">Redirecting...</p>
     </div>
   );
 }

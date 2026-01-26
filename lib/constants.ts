@@ -1,7 +1,12 @@
-export const carBrands = []; // Unused in electronics, kept for legacy if needed
-
+export const carBrands = [];
 export const currencies = ["USD", "EUR", "GBP"];
-
-// Translated or generic options if needed in future
-export const conditions = ["New", "Used", "Refurbished"];
-export const warrantyStatus = ["Yes", "No"];
+export const fuelTypes = ["Gasoline", "Diesel", "Hybrid", "Electric"];
+export const gearTypes = ["Manual", "Automatic"];
+export const vehicleStatuses = ["Used", "New"];
+export const bodyTypes = ["Sedan", "Hatchback", "SUV"];
+export const motorPowers = ["Up to 100 HP", "101-150 HP", "151+ HP"];
+export const engineCapacities = ["Up to 1.6L", "1.6L - 2.0L", "2.0L+"];
+export const tractions = ["FWD", "RWD", "AWD"];
+export const colors = ["White", "Black", "Silver", "Blue", "Red"];
+export const sellerTypes = ["Owner", "Dealer"];
+export const plateTypes = ["US Plate", "Other"];
