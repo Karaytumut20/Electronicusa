@@ -11,6 +11,7 @@ import { adSchema } from '@/lib/schemas';
 import { cities, getDistricts } from '@/lib/locations';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
+import { techSpecsRequiredSlugs } from '@/lib/hierarchyData';
 
 function PostAdFormContent() {
   const router = useRouter();
@@ -18,9 +19,14 @@ function PostAdFormContent() {
   const { addToast } = useToast();
   const { user } = useAuth();
 
-  const categorySlug = searchParams.get('cat') || '';
+  const categorySlug = searchParams.get('cat')?.toLowerCase() || '';
   const categoryPath = searchParams.get('path') || 'No Category Selected';
   const urlBrand = searchParams.get('brand') || '';
+
+  // AKILLI KONTROL: Eğer kategori slug'ı veya seçilen yol bilgisayar terimleri içeriyorsa Tech Specs açılır.
+  const isTechSpecsRequired = techSpecsRequiredSlugs.some(slug =>
+    categorySlug.includes(slug) || categoryPath.toLowerCase().includes(slug)
+  );
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [images, setImages] = useState<string[]>([]);
@@ -47,8 +53,6 @@ function PostAdFormContent() {
   };
 
   const handleDynamicChange = (e: any) => {
-     // ComputerFields passes a fake event object or direct name/value?
-     // Standardizing to event object for simplicity based on existing component
      const { name, value } = e.target || e;
      setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -71,7 +75,6 @@ function PostAdFormContent() {
         result.error.issues.forEach(issue => { fieldErrors[issue.path[0]] = issue.message; });
         setErrors(fieldErrors);
         addToast('Please fill in required fields.', 'error');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
     }
 
@@ -88,69 +91,59 @@ function PostAdFormContent() {
   return (
     <div className="flex flex-col lg:flex-row gap-8 relative">
       <div className="flex-1">
-        <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-6 flex items-center justify-between">
-          <div>
-            <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide mb-1">Category</p>
-            <h1 className="text-sm md:text-base font-bold text-indigo-900">{categoryPath}</h1>
-          </div>
-          <button onClick={() => router.push('/post-ad')} className="text-xs font-bold text-slate-500 hover:text-indigo-600 bg-white px-3 py-1.5 rounded-lg border border-indigo-100 hover:border-indigo-300 transition-colors">Change</button>
+        <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-6">
+            <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Selected Category</p>
+            <h1 className="text-sm font-bold text-indigo-900">{categoryPath}</h1>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-8">
-          <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Info className="text-indigo-500" size={20}/> Basic Information</h3>
+          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
+             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Info className="text-indigo-500" size={20}/> Basic Info</h3>
              <div className="space-y-5">
-               <Input label="Ad Title" name="title" placeholder="Ex: Macbook Pro M1, Like New..." value={formData.title} onChange={handleInputChange} error={errors.title} />
-               <Textarea label="Description" name="description" placeholder="Describe your product..." value={formData.description} onChange={handleInputChange} className="h-32" error={errors.description} />
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                 <Input label="Price" name="price" type="number" placeholder="0" value={formData.price} onChange={handleInputChange} error={errors.price} />
+               <Input label="Title" name="title" value={formData.title} onChange={handleInputChange} error={errors.title} />
+               <Textarea label="Description" name="description" value={formData.description} onChange={handleInputChange} error={errors.description} />
+               <div className="grid grid-cols-2 gap-5">
+                 <Input label="Price" name="price" type="number" value={formData.price} onChange={handleInputChange} error={errors.price} />
                  <div>
-                   <label className="block text-[11px] font-bold text-gray-600 mb-1">Currency</label>
-                   <select name="currency" value={formData.currency} onChange={handleInputChange} className="w-full h-10 border border-gray-300 rounded-sm px-2 text-sm bg-white outline-none">
-                     <option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option>
+                   <label className="block text-xs font-bold text-gray-600 mb-1">Currency</label>
+                   <select name="currency" value={formData.currency} onChange={handleInputChange} className="w-full h-10 border border-gray-300 rounded-sm px-2 text-sm bg-white">
+                     <option value="USD">USD</option><option value="EUR">EUR</option>
                    </select>
                  </div>
                </div>
              </div>
           </section>
 
-          <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-1 h-full bg-orange-500"></div>
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Cpu className="text-orange-500" size={20}/> Tech Specs</h3>
-             <ComputerFields data={formData} onChange={handleDynamicChange} categorySlug={categorySlug} />
-          </section>
+          {/* AKILLI KOŞUL: Sadece listedeki terimler eşleşirse görünür */}
+          {isTechSpecsRequired && (
+            <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in duration-300">
+               <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Cpu className="text-orange-500" size={20}/> Technical Specifications</h3>
+               <ComputerFields data={formData} onChange={handleDynamicChange} categorySlug={categorySlug} />
+            </section>
+          )}
 
-          <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
              <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin className="text-green-500" size={20}/> Location</h3>
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-               <div>
-                 <label className="block text-[11px] font-bold text-gray-600 mb-1">State / City</label>
-                 <select name="city" onChange={handleInputChange} value={formData.city} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg outline-none text-sm">
-                    <option value="">Select</option>
+             <div className="grid grid-cols-2 gap-5">
+               <select name="city" onChange={handleInputChange} value={formData.city} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg text-sm">
+                    <option value="">Select City</option>
                     {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-                 </select>
-               </div>
-               <div>
-                 <label className="block text-[11px] font-bold text-gray-600 mb-1">District / Area</label>
-                 <select name="district" value={formData.district} onChange={handleInputChange} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg outline-none text-sm" disabled={!formData.city}>
-                    <option value="">Select</option>
+               </select>
+               <select name="district" value={formData.district} onChange={handleInputChange} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg text-sm" disabled={!formData.city}>
+                    <option value="">Select District</option>
                     {districts.map(d => <option key={d} value={d}>{d}</option>)}
-                 </select>
-               </div>
+               </select>
              </div>
           </section>
 
-          <section className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 relative overflow-hidden">
-             <div className="absolute top-0 left-0 w-1 h-full bg-pink-500"></div>
+          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
              <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Camera className="text-pink-500" size={20}/> Photos</h3>
              <ImageUploader onImagesChange={setImages} initialImages={images} />
           </section>
 
           <div className="flex justify-end pt-4">
-             <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 disabled:opacity-50 shadow-lg shadow-indigo-200">
-                {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : 'Publish Ad'}
+             <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 shadow-lg transition-all">
+                {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : 'Publish Listing'}
              </button>
           </div>
         </form>
@@ -160,5 +153,5 @@ function PostAdFormContent() {
 }
 
 export default function PostAdPage() {
-    return <Suspense fallback={<div className="p-20 text-center"><Loader2 className="animate-spin mx-auto text-indigo-600" size={32}/></div>}><PostAdFormContent /></Suspense>
+    return <Suspense fallback={<div>Loading...</div>}><PostAdFormContent /></Suspense>
 }

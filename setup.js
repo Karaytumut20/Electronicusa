@@ -11,183 +11,333 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 OPTIMIZING CATEGORY HIERARCHY & IMPORTING DATA...\n" +
+    "\n🚀 CACHE HATASI DÜZELTİLİYOR (Static Client Entegrasyonu)...\n" +
     colors.reset,
 );
 
-// NOT: Supabase > Authentication > Users kısmından kendi ID'nizi buraya yapıştırın.
-const MOCK_USER_ID = "YOUR_SUPABASE_USER_ID_HERE";
-
 const filesToUpdate = [
   {
-    path: "components/Header.tsx",
-    content: `"use client";
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Search, Plus, User, LogOut, Menu } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import MobileMenu from './MobileMenu';
+    path: "lib/actions.ts",
+    content: `'use server'
+import { createClient, createStaticClient } from '@/lib/supabase/server'
+import { revalidatePath, unstable_cache } from 'next/cache'
+import { adSchema } from '@/lib/schemas'
+import { logActivity } from '@/lib/logger'
+import { AdFormData } from '@/types'
+import { analyzeAdContent } from '@/lib/moderation/engine'
 
-export default function Header() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+// --- YARDIMCI FONKSİYONLAR ---
+async function checkRateLimit(userId: string) {
+    const supabase = await createClient();
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const { count } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('user_id', userId).gte('created_at', oneDayAgo);
+    return (count || 0) < 10;
+}
 
-  // Arama çubuğunun gizleneceği sayfalar
-  const hideSearch = pathname === '/login' || pathname === '/register' || pathname.startsWith('/admin');
+// --- İLAN OLUŞTURMA ---
+export async function createAdAction(formData: Partial<AdFormData>) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Oturum açmanız gerekiyor.' }
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) router.push(\`/search?q=\${encodeURIComponent(searchTerm)}\`);
-  };
+  if (!(await checkRateLimit(user.id))) return { error: 'Günlük ilan limiti dolu.' };
 
-  return (
-    <>
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 h-[70px] md:h-[80px] flex items-center justify-center sticky top-0 z-50 transition-all">
-        <div className="container max-w-7xl flex items-center justify-between px-4 md:px-6 h-full gap-4">
-          <div className="flex items-center gap-2">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="lg:hidden p-2 text-slate-600 active:bg-slate-100 rounded-full">
-              <Menu size={24} />
-            </button>
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-lg shadow-indigo-200">E</div>
-              <span className="font-black text-lg md:text-2xl tracking-tighter text-slate-800 hidden xs:block">Electronic<span className="text-indigo-600">USA</span></span>
-            </Link>
-          </div>
+  const validation = adSchema.safeParse(formData);
+  if (!validation.success) return { error: validation.error.issues[0].message };
 
-          {!hideSearch && (
-            <div className="flex-1 max-w-[500px] hidden lg:block">
-              <form onSubmit={handleSearch} className="relative group">
-                <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search brands, models or products..." className="w-full h-[46px] pl-12 pr-4 bg-slate-100 border-none rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none" />
-                <Search size={18} className="absolute left-4 top-[14px] text-slate-400 group-focus-within:text-indigo-600" />
-              </form>
-            </div>
-          )}
+  const analysis = analyzeAdContent(validation.data.title, validation.data.description);
 
-          <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/post-ad" className="bg-indigo-600 text-white p-2.5 md:px-5 md:py-2.5 rounded-full md:rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
-              <Plus size={20}/> <span className="hidden md:inline">Post Ad</span>
-            </Link>
-            {!user ? (
-              <Link href="/login" className="text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100">Login</Link>
-            ) : (
-              <div className="relative">
-                <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="w-10 h-10 rounded-full bg-slate-100 border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden flex items-center justify-center">
-                  {user.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : <User size={20} className="text-slate-600" />}
-                </button>
-                {userMenuOpen && (
-                  <div className="absolute right-0 top-full mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
-                    <Link href="/dashboard" className="block px-4 py-2.5 hover:bg-indigo-50 text-sm text-slate-700">Dashboard</Link>
-                    <Link href="/dashboard/my-ads" className="block px-4 py-2.5 hover:bg-indigo-50 text-sm text-slate-700">My Listings</Link>
-                    <div className="border-t border-slate-50 mt-2 pt-2">
-                      <button onClick={logout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-sm text-red-600 flex items-center gap-2 font-bold"><LogOut size={16}/> Logout</button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
+  const { data: profile } = await supabase.from('profiles').select('id').eq('id', user.id).single();
+  if (!profile) await supabase.from('profiles').insert([{ id: user.id, email: user.email }]);
 
-      {!hideSearch && (
-        <div className="lg:hidden bg-white px-4 pb-3 border-b border-slate-100 sticky top-[70px] z-[45]">
-          <form onSubmit={handleSearch} className="relative">
-            <input type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} placeholder="Search ads..." className="w-full h-[40px] pl-10 pr-4 bg-slate-100 rounded-xl text-sm outline-none border-none focus:ring-2 focus:ring-indigo-200" />
-            <Search size={16} className="absolute left-3 top-[12px] text-slate-400" />
-          </form>
-        </div>
-      )}
-      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
-    </>
-  );
-}`,
+  const { data, error } = await supabase.from('ads').insert([{
+    ...validation.data,
+    user_id: user.id,
+    status: 'onay_bekliyor',
+    is_vitrin: false, is_urgent: false,
+    moderation_score: analysis.score, moderation_tags: analysis.flags,
+    admin_note: analysis.autoReject ? \`OTOMATİK RET: \${analysis.rejectReason}\` : null
+  }]).select('id').single()
+
+  if (error) return { error: \`Hata: \${error.message}\` }
+
+  await logActivity(user.id, 'CREATE_AD', { adId: data.id, title: validation.data.title });
+  if (analysis.autoReject) return { error: \`İlan reddedildi: \${analysis.rejectReason}\` };
+
+  revalidatePath('/');
+  return { success: true, adId: data.id }
+}
+
+// --- İLAN LİSTELEME ---
+export async function getInfiniteAdsAction(page = 1, limit = 20) {
+    const supabase = await createClient();
+    const start = (page - 1) * limit;
+    const end = start + limit - 1;
+
+    const { data, count, error } = await supabase
+        .from('ads')
+        .select('*, profiles(full_name)', { count: 'exact' })
+        .eq('status', 'yayinda')
+        .order('is_vitrin', { ascending: false })
+        .order('created_at', { ascending: false })
+        .range(start, end);
+
+    if (error) return { data: [], total: 0, hasMore: false };
+    return { data: data || [], total: count || 0, hasMore: (count || 0) > end + 1 };
+}
+
+export async function getAdsServer(searchParams: any) {
+  const supabase = await createClient()
+  const page = Number(searchParams?.page) || 1;
+  const limit = 20;
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  let query = supabase.from('ads').select('*, profiles(full_name), categories(title)', { count: 'exact' }).eq('status', 'yayinda');
+
+  if (searchParams?.q) query = query.textSearch('fts', searchParams.q, { config: 'turkish', type: 'websearch' });
+  if (searchParams?.minPrice) query = query.gte('price', searchParams.minPrice);
+  if (searchParams?.maxPrice) query = query.lte('price', searchParams.maxPrice);
+  if (searchParams?.city) query = query.eq('city', searchParams.city);
+  if (searchParams?.category) query = query.eq('category', searchParams.category);
+  if (searchParams?.brand) query = query.eq('brand', searchParams.brand);
+
+  if (searchParams?.sort === 'price_asc') query = query.order('price', { ascending: true });
+  else if (searchParams?.sort === 'price_desc') query = query.order('price', { ascending: false });
+  else query = query.order('is_vitrin', { ascending: false }).order('created_at', { ascending: false });
+
+  query = query.range(from, to);
+  const { data, count, error } = await query;
+
+  if (error) return { data: [], count: 0, totalPages: 0 };
+  return { data: data || [], count: count || 0, totalPages: count ? Math.ceil(count / limit) : 0 };
+}
+
+// --- DİNAMİK KATEGORİ SİSTEMİ (DÜZELTİLDİ: STATIC CLIENT) ---
+export const getCategoryTreeServer = unstable_cache(
+  async () => {
+    // DÜZELTME: createClient() yerine createStaticClient() kullanılıyor.
+    // createStaticClient cookies() kullanmaz, bu yüzden cache içinde güvenlidir.
+    const supabase = createStaticClient();
+
+    const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .order('title', { ascending: true });
+
+    if (error || !data) return [];
+
+    const roots = data.filter(c => !c.parent_id);
+    return roots.map(root => ({
+        ...root,
+        subs: data.filter(c => c.parent_id === root.id)
+    }));
+  },
+  ['category-tree-cache'],
+  { revalidate: 3600, tags: ['categories'] }
+);
+
+export async function addCategoryAction(categoryData: { title: string, slug: string, icon: string, parent_id?: number }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('categories').insert([categoryData]).select().single();
+    if (error) return { error: error.message };
+    revalidatePath('/');
+    return { success: true, data };
+}
+
+// --- İLAN DETAY & İŞLEMLER ---
+export async function getAdDetailServer(id: number) {
+  const supabase = await createClient()
+  const { data } = await supabase.from('ads').select('*, profiles(*), categories(title)').eq('id', id).single()
+  return data
+}
+
+export async function updateAdAction(id: number, formData: any) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('ads').update(formData).eq('id', id);
+    if (error) return { error: error.message };
+    revalidatePath('/bana-ozel/ilanlarim');
+    return { success: true };
+}
+
+export async function approveAdAction(id: number) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('ads').update({ status: 'yayinda' }).eq('id', id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
+export async function rejectAdAction(id: number, reason: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('ads').update({ status: 'reddedildi', admin_note: reason }).eq('id', id);
+    if (error) return { success: false, error: error.message };
+    return { success: true };
+}
+
+export async function deleteAdSafeAction(adId: number) {
+    const supabase = await createClient();
+    await supabase.from('ads').update({ status: 'pasif' }).eq('id', adId);
+    revalidatePath('/bana-ozel/ilanlarim');
+    return { message: 'Silindi' };
+}
+
+// --- KULLANICI & PROFİL ---
+export async function updateProfileAction(d: any) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'Auth error' };
+    const updates = { full_name: d.full_name, phone: d.phone, avatar_url: d.avatar_url, show_phone: d.show_phone };
+    const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
+    return { success: !error, error: error ? error.message : null };
+}
+
+export async function updatePasswordAction(password: string) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.updateUser({ password });
+    return { success: !error, error: error?.message };
+}
+
+// --- MAĞAZA İŞLEMLERİ ---
+export async function getMyStoreServer() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return null;
+  const { data } = await supabase.from('stores').select('*').eq('user_id', user.id).single();
+  return data;
+}
+
+export async function createStoreAction(formData: any) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
+  const { error } = await supabase.from('stores').insert([{ ...formData, user_id: user.id }]);
+  if (error) return { error: 'Hata oluştu.' };
+  await supabase.from('profiles').update({ role: 'store' }).eq('id', user.id);
+  revalidatePath('/bana-ozel/magazam');
+  return { success: true };
+}
+
+export async function updateStoreAction(formData: any) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
+  const { error } = await supabase.from('stores').update(formData).eq('user_id', user.id);
+  if (error) return { error: 'Güncelleme başarısız.' };
+  revalidatePath('/bana-ozel/magazam');
+  return { success: true };
+}
+
+export async function getStoreBySlugServer(slug: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from('stores').select('*').eq('slug', slug).single();
+  return data;
+}
+
+export async function getStoreAdsServer(userId: string) {
+  const supabase = await createClient();
+  const { data } = await supabase.from('ads').select('*').eq('user_id', userId).eq('status', 'yayinda');
+  return data || [];
+}
+
+// --- DİĞERLERİ ---
+export async function getAdFavoriteCount(adId: number) {
+    const supabase = await createClient();
+    const { count } = await supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('ad_id', adId);
+    return count || 0;
+}
+
+export async function getSellerReviewsServer(id: string) {
+    const supabase = await createClient();
+    const { data } = await supabase.from('reviews').select('*').eq('target_user_id', id);
+    return data || [];
+}
+
+export async function createReviewAction(targetId: string, rating: number, comment: string, adId: number) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { error: 'Giriş gerekli' };
+    await supabase.from('reviews').insert({ target_user_id: targetId, reviewer_id: user.id, rating, comment, ad_id: adId });
+    return { success: true };
+}
+
+export async function getRelatedAdsServer(cat: string, id: number, price?: number) {
+    const supabase = await createClient();
+    const { data } = await supabase.from('ads').select('*').eq('category', cat).neq('id', id).limit(4);
+    return data || [];
+}
+
+export async function incrementViewCountAction(id: number) {
+    const supabase = await createClient();
+    await supabase.rpc('increment_view_count', { ad_id_input: id });
+}
+
+export async function getUserDashboardStats() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return [];
+    const { data } = await supabase.from('ads').select('status, view_count, price').eq('user_id', user.id);
+    return data || [];
+}
+
+export async function createReportAction(adId: number, reason: string, description: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const { error } = await supabase.from('reports').insert([{ ad_id: adId, user_id: user?.id || null, reason, description }]);
+    if (error) return { error: error.message };
+    return { success: true };
+}
+
+export async function getAuditLogsServer() {
+    const supabase = await createClient();
+    const { data } = await supabase.from('audit_logs').select('*, profiles(full_name, email)').order('created_at', { ascending: false }).limit(100);
+    return data || [];
+}
+
+export async function getAdsByIds(ids: number[]) {
+    if(!ids.length) return [];
+    const supabase = await createClient();
+    const { data } = await supabase.from('ads').select('*').in('id', ids);
+    return data || [];
+}
+
+export async function getPageBySlugServer(slug: string) {
+    return { title: 'Kurumsal', content: '<p>İçerik</p>' };
+}
+
+export async function getHelpContentServer() {
+    return { categories: [], faqs: [] };
+}
+
+// Deprecated or Placeholders
+export async function activateDopingAction(id: number, types: string[]) { return { success: true } }
+export async function getAdminStatsServer() { return { totalUsers: 0, activeAds: 0, totalRevenue: 0 }; }
+export async function getLocationsServer() { return []; }
+export async function getDistrictsServer(cityName: string) { return []; }
+export async function getFacetCountsServer() { return []; }
+`,
   },
 ];
 
 filesToUpdate.forEach((file) => {
   try {
     const filePath = path.join(process.cwd(), file.path);
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, file.content.trim());
-    console.log(colors.green + "✔ " + file.path + " updated." + colors.reset);
+    console.log(
+      colors.green +
+        "✔ " +
+        file.path +
+        " başarıyla güncellendi." +
+        colors.reset,
+    );
   } catch (err) {
-    console.error(colors.bold + "✘ Failed: " + err.message + colors.reset);
+    console.error(colors.bold + "✘ Hata: " + err.message + colors.reset);
   }
 });
 
-// SQL DOSYASI OLUŞTURMA (Hiyerarşik Yapı)
-let sqlContent =
-  "-- 1. Kategorileri Temizle\\nTRUNCATE TABLE categories CASCADE;\\n\\n";
-
-sqlContent += "-- 2. Ana Kategorileri Ekle\\n";
-sqlContent += "INSERT INTO categories (id, title, slug, icon) VALUES\\n";
-sqlContent += "(1, 'Apple Ecosystem', 'apple', 'Smartphone'),\\n";
-sqlContent += "(2, 'Gaming & VR', 'gaming', 'Gamepad2'),\\n";
-sqlContent += "(3, 'Laptops & Computing', 'computing', 'Monitor'),\\n";
-sqlContent += "(4, 'Smart Home & Streaming', 'smart-home', 'Zap'),\\n";
-sqlContent += "(5, 'Cameras & Action Cam', 'cameras', 'Camera'),\\n";
-sqlContent += "(6, 'Consumer Electronics', 'consumer', 'Plug');\\n\\n";
-
-sqlContent += "-- 3. Mantıklı Alt Kategorileri Ekle\\n";
-sqlContent += "INSERT INTO categories (title, slug, parent_id) VALUES\\n";
-sqlContent +=
-  "('iPhones', 'iphones', 1), ('Airpods', 'airpods', 1), ('Apple Watch', 'apple-watch', 1), ('iPads', 'ipads', 1), ('Mac & Desktop', 'macs', 1), ('Apple Accessories', 'apple-acc', 1),\\n";
-sqlContent +=
-  "('VR Headsets (Meta)', 'vr-meta', 2), ('Gaming Consoles', 'consoles', 2), ('Controllers', 'controllers', 2), ('PlayStation VR', 'psvr', 2),\\n";
-sqlContent +=
-  "('Gaming Laptops', 'gaming-laptops', 3), ('Business Laptops', 'business-laptops', 3), ('PC Components', 'components', 3), ('Monitors', 'monitors', 3), ('Internal HDD/SSD', 'storage-drive', 3),\\n";
-sqlContent +=
-  "('Streaming Sticks (Fire/Onn)', 'streaming-sticks', 4), ('Smart Thermostats (Nest)', 'thermostats', 4), ('Mesh Wi-Fi & Routers', 'routers', 4), ('Echo & Smart Speakers', 'smart-speakers', 4),\\n";
-sqlContent +=
-  "('Action Cameras (DJI)', 'action-cams', 5), ('Camera Accessories', 'cam-acc', 5), ('Instant Film', 'instant-film', 5),\\n";
-sqlContent +=
-  "('Starlink Terminals', 'starlink', 6), ('Fitness Trackers (Whoop)', 'fitness', 6), ('Power Adapters', 'adapters', 6);\\n\\n";
-
-sqlContent += "-- 4. Ürün Listesini Doğru Kategorilere Bağlayarak Ekle\\n";
-sqlContent +=
-  "INSERT INTO ads (user_id, title, price, currency, category, brand, city, status, is_vitrin) VALUES\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Meta Quest 3S 128GB Walking Dead Bundle', 300, 'USD', 'vr-meta', 'Meta', 'Atlanta', 'yayinda', true),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'iPhone 17 Pro Max 256GB Orange Edition', 1199, 'USD', 'iphones', 'Apple', 'Miami', 'yayinda', true),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Apple AirPods 4 - White MXP63LL/A', 179, 'USD', 'airpods', 'Apple', 'USA', 'yayinda', false),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Sony PlayStation 5 Slim Console Digital', 499, 'USD', 'consoles', 'Sony', 'Miami', 'yayinda', true),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'HP Victus 15.6 Gaming Laptop RTX 4050', 850, 'USD', 'gaming-laptops', 'HP', 'USA', 'yayinda', false),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Starlink Mini - High Speed Internet', 599, 'USD', 'starlink', 'SpaceX', 'USA', 'yayinda', true),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Amazon Fire TV Stick 4K Max 2024', 59, 'USD', 'streaming-sticks', 'Amazon', 'Miami', 'yayinda', false),\\n";
-sqlContent +=
-  "('" +
-  MOCK_USER_ID +
-  "', 'Google Nest Learning Thermostat 3rd Gen', 249, 'USD', 'thermostats', 'Google', 'Miami', 'yayinda', false);\\n";
-
-fs.writeFileSync("supabase/seed_data.sql", sqlContent);
-
 console.log(
-  colors.blue +
-    "\n👉 Generated 'supabase/seed_data.sql'. Please run its content in Supabase SQL Editor." +
+  colors.green +
+    "\n✅ Runtime hatası giderildi! Artık npm run dev ile sorunsuz çalışması gerekiyor." +
     colors.reset,
 );
-console.log(colors.green + "\n✅ ALL UPDATES READY!" + colors.reset);
