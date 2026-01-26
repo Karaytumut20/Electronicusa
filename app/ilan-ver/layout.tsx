@@ -1,21 +1,20 @@
 "use client";
 import React from 'react';
 import { usePathname } from 'next/navigation';
-import { Check, Layers, FileText, Zap, CreditCard } from 'lucide-react';
+import { Check, Layers, FileText } from 'lucide-react';
 
+// DOPING VE ÖDEME ADIMLARI KALDIRILDI
 const steps = [
   { id: 'category', label: 'Kategori', path: '/ilan-ver', icon: Layers },
   { id: 'details', label: 'İlan Detayı', path: '/ilan-ver/detay', icon: FileText },
-  { id: 'doping', label: 'Öne Çıkar', path: '/ilan-ver/doping', icon: Zap },
-  { id: 'payment', label: 'Ödeme', path: '/ilan-ver/odeme', icon: CreditCard },
 ];
 
-export default function PostAdLayout({ children }: { children: React.ReactNode }) {
+export default function PostAdLayout({ children }) {
   const pathname = usePathname();
 
   // Aktif adımı bul
   const activeIndex = steps.findIndex(s => pathname === s.path || pathname.startsWith(s.path + '/'));
-  const safeActiveIndex = activeIndex === -1 && pathname.includes('basarili') ? 4 : activeIndex;
+  const safeActiveIndex = activeIndex === -1 && pathname.includes('basarili') ? 2 : activeIndex;
 
   return (
     <div className="min-h-screen bg-gray-50/50 pb-20">

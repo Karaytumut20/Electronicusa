@@ -1,192 +1,135 @@
 "use client";
 import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Filter, Check, RotateCcw, ChevronDown, ChevronUp, Loader2, Search, ArrowRight } from 'lucide-react';
-import { getLocationsServer, getFacetCountsServer } from '@/lib/actions';
-import { carHierarchy } from '@/lib/hierarchyData';
-import {
-  fuelTypes, gearTypes, vehicleStatuses, bodyTypes,
-  motorPowers, engineCapacities, tractions, colors, sellerTypes, plateTypes
-} from '@/lib/constants';
+import { Filter, RotateCcw, ChevronDown, ChevronUp, Search, Cpu, Monitor, HardDrive } from 'lucide-react';
+import { computerBrands, phoneBrands } from '@/lib/hierarchyData';
+import { processors, ramOptions, screenSizes, gpuCapacities, ssdCapacities } from '@/lib/computerData';
 
 export default function FilterSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-
-  // URL'den gelenler
-  const currentCategorySlug = searchParams.get('category');
-  const currentBrand = searchParams.get('brand');
-  const currentSeries = searchParams.get('series');
-
-  const [provinces, setProvinces] = useState<any[]>([]);
-  const [facetCounts, setFacetCounts] = useState<Record<string, number>>({});
-  const [loadingLoc, setLoadingLoc] = useState(true);
-
-  // Yerel Filtre State'i (Anlık olarak URL'i değiştirmesin, butona basınca değişsin)
-  const [filters, setFilters] = useState<any>({});
-
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-      location: true, vehicle_basic: true, vehicle_tech: false, vehicle_details: false, real_estate: true, computer: true
+  const [filters, setFilters] = useState({});
+  const [expanded, setExpanded] = useState({
+      brand: true, specs: true, price: true
   });
 
   useEffect(() => {
-    async function initData() {
-        try {
-            const [locs, counts] = await Promise.all([getLocationsServer(), getFacetCountsServer()]);
-            setProvinces(locs);
-            const countMap: Record<string, number> = {};
-            if (counts) counts.forEach((c: any) => { countMap[c.city_name] = c.count; });
-            setFacetCounts(countMap);
-        } catch (e) { console.error(e); } finally { setLoadingLoc(false); }
-    }
-    initData();
-  }, []);
-
-  // URL değişince local state'i senkronize et
-  useEffect(() => {
-    const newFilters: any = {};
+    const newFilters = {};
     searchParams.forEach((value, key) => { newFilters[key] = value; });
     setFilters(newFilters);
   }, [searchParams]);
 
-  const updateFilter = (key: string, value: string) => {
-      setFilters((prev: any) => {
+  const updateFilter = (key, value) => {
+      setFilters((prev) => {
           const next = { ...prev, [key]: value };
           if (!value) delete next[key];
           return next;
       });
   };
 
-  // Bu fonksiyon SADECE yerel state'i günceller, sayfayı yenilemez.
-  const handleBrandChangeLocal = (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const brand = e.target.value;
-      updateFilter('brand', brand);
-      updateFilter('series', ''); // Marka değişince seri sıfırlanır
-      updateFilter('model', '');
-  };
-
-  // SORGULAMA BUTONU (Kritik Nokta)
   const applyFilters = () => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.set(key, value as string);
+        if (value) params.set(key, value);
     });
-
-    // "Sonuçları Göster" bayrağı ekle ki SearchPage ilanları getirsin
     params.set('showResults', 'true');
-
     router.push(`/search?${params.toString()}`);
   };
 
   const clearFilters = () => {
-    const params = new URLSearchParams();
-    if (currentCategorySlug) params.set('category', currentCategorySlug);
-    router.push(`/search?${params.toString()}`);
+    router.push('/search');
   };
 
-  const toggleSection = (key: string) => setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
 
-  // Dinamik Listeler (Yerel State'e göre hesaplanır)
-  const selectedBrandLocal = filters.brand || '';
-  const selectedSeriesLocal = filters.series || '';
+  // Kategoriye göre marka listesi
+  const cat = filters.category || '';
+  let activeBrands = computerBrands;
+  if (cat.includes('telefon') || cat.includes('cep')) activeBrands = phoneBrands;
 
-  const brandList = Object.keys(carHierarchy).sort();
-  const seriesList = selectedBrandLocal ? Object.keys(carHierarchy[selectedBrandLocal] || {}).sort() : [];
-  const modelList = selectedBrandLocal && selectedSeriesLocal ? (carHierarchy[selectedBrandLocal][selectedSeriesLocal] || []).sort() : [];
-
-  const isVehicle = currentCategorySlug?.includes('vasita') || currentCategorySlug?.includes('otomobil') || currentCategorySlug?.includes('suv') || filters.brand; // Marka seçildiyse de araçtır
-
-  const FilterSection = ({ id, title, children }: { id: string, title: string, children: React.ReactNode }) => (
+  const FilterSection = ({ id, title, icon: Icon, children }) => (
       <div className="border-b border-gray-100 py-4 last:border-0">
-          <button onClick={() => toggleSection(id)} className="flex items-center justify-between w-full text-left mb-2 group">
-              <span className="text-[12px] font-bold text-gray-700 uppercase tracking-wide group-hover:text-blue-700 transition-colors">{title}</span>
-              {expandedSections[id] ? <ChevronUp size={14} className="text-gray-400"/> : <ChevronDown size={14} className="text-gray-400"/>}
+          <button onClick={() => toggle(id)} className="flex items-center justify-between w-full text-left mb-2 group">
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2 group-hover:text-blue-600 transition-colors">
+                  {Icon && <Icon size={14} className="text-slate-400 group-hover:text-blue-500"/>} {title}
+              </span>
+              {expanded[id] ? <ChevronUp size={14} className="text-gray-400"/> : <ChevronDown size={14} className="text-gray-400"/>}
           </button>
-          {expandedSections[id] && <div className="space-y-3 pt-1 animate-in slide-in-from-top-1 duration-200">{children}</div>}
-      </div>
-  );
-
-  const SelectInput = ({ label, name, options }: { label: string, name: string, options: string[] }) => (
-      <div>
-          <label className="text-[10px] font-bold text-gray-500 mb-1 block">{label}</label>
-          <select value={filters[name] || ''} onChange={(e) => updateFilter(name, e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 focus:border-blue-500 outline-none bg-white">
-              <option value="">Tümü</option>
-              {options.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-          </select>
+          {expanded[id] && <div className="space-y-3 pt-2 animate-in slide-in-from-top-1">{children}</div>}
       </div>
   );
 
   return (
-    <div className="bg-white border border-gray-200 rounded-sm shadow-sm p-4 sticky top-24 max-h-[calc(100vh-120px)] overflow-y-auto scrollbar-thin">
+    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-5 sticky top-24">
 
-      {/* AKSİYON BUTONU */}
-      <div className="mb-6 bg-blue-50 p-3 rounded-lg border border-blue-100">
-        <h3 className="font-bold text-blue-900 text-sm mb-2 flex items-center gap-2"><Filter size={16} /> Arama Kriterleri</h3>
-        <button onClick={applyFilters} className="w-full bg-blue-600 text-white text-[13px] font-bold py-2.5 rounded hover:bg-blue-700 transition-all shadow-sm hover:shadow-md flex items-center justify-center gap-2 active:scale-95">
-            <Search size={16} /> Sonuçları Listele
+      <div className="mb-6 bg-indigo-50/50 p-4 rounded-xl border border-indigo-100">
+        <h3 className="font-bold text-indigo-900 text-sm mb-3 flex items-center gap-2">
+            <Filter size={16} /> Filtrele
+        </h3>
+        <button onClick={applyFilters} className="w-full bg-indigo-600 text-white text-sm font-bold py-2.5 rounded-lg hover:bg-indigo-700 transition-all shadow-sm flex items-center justify-center gap-2">
+            <Search size={16} /> Sonuçları Göster
         </button>
-        <button onClick={clearFilters} className="w-full text-center text-[10px] text-gray-500 hover:text-red-600 underline mt-2 flex items-center justify-center gap-1">
-            <RotateCcw size={10}/> Tümünü Temizle
+        <button onClick={clearFilters} className="w-full text-center text-xs text-slate-500 hover:text-red-600 mt-2 flex items-center justify-center gap-1 font-medium transition-colors">
+            <RotateCcw size={12}/> Temizle
         </button>
       </div>
 
-      <FilterSection id="location" title="Konum & Fiyat">
-          <div>
-            <label className="text-[10px] font-bold text-gray-500 mb-1 block flex justify-between"><span>İL</span> {loadingLoc && <Loader2 size={10} className="animate-spin"/>}</label>
-            <select value={filters.city || ''} onChange={(e) => updateFilter('city', e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 focus:border-blue-500 outline-none bg-white" disabled={loadingLoc}>
-                <option value="">Tüm İller</option>
-                {provinces.map((c: any) => (<option key={c.id} value={c.name}>{c.name} {facetCounts[c.name] ? `(${facetCounts[c.name]})` : ''}</option>))}
-            </select>
-          </div>
-          <div>
-            <label className="text-[10px] font-bold text-gray-500 mb-1 block">FİYAT (TL)</label>
-            <div className="flex gap-2">
-                <input type="number" placeholder="Min" value={filters.minPrice || ''} onChange={(e) => updateFilter('minPrice', e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 outline-none focus:border-blue-500" />
-                <input type="number" placeholder="Max" value={filters.maxPrice || ''} onChange={(e) => updateFilter('maxPrice', e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 outline-none focus:border-blue-500" />
-            </div>
+      <FilterSection id="price" title="Fiyat Aralığı">
+          <div className="flex gap-2 items-center">
+              <input type="number" placeholder="Min TL" value={filters.minPrice || ''} onChange={(e) => updateFilter('minPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+              <span className="text-gray-400">-</span>
+              <input type="number" placeholder="Max TL" value={filters.maxPrice || ''} onChange={(e) => updateFilter('maxPrice', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-3 outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
           </div>
       </FilterSection>
 
-      {/* Sadece araç kategorisi seçiliyse veya bir araç markası seçildiyse göster */}
-      {isVehicle && (
-        <>
-          <FilterSection id="vehicle_basic" title="Araç Seçimi">
-             <div>
-                 <label className="text-[10px] font-bold text-gray-500 mb-1 block">MARKA</label>
-                 <select value={selectedBrandLocal} onChange={handleBrandChangeLocal} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 focus:border-blue-500 outline-none bg-white">
-                     <option value="">Seçiniz</option>
-                     {brandList.map(b => <option key={b} value={b}>{b}</option>)}
-                 </select>
-             </div>
+      <FilterSection id="brand" title="Marka">
+          <select value={filters.brand || ''} onChange={(e) => updateFilter('brand', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+              <option value="">Tümü</option>
+              {activeBrands.map(b => <option key={b} value={b}>{b}</option>)}
+          </select>
+      </FilterSection>
 
-             <div>
-                 <label className="text-[10px] font-bold text-gray-500 mb-1 block">SERİ</label>
-                 <select value={selectedSeriesLocal} onChange={(e) => { updateFilter('series', e.target.value); updateFilter('model', ''); }} disabled={!selectedBrandLocal} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 focus:border-blue-500 outline-none bg-white disabled:bg-gray-100 disabled:text-gray-400">
-                     <option value="">Seçiniz</option>
-                     {seriesList.map(s => <option key={s} value={s}>{s}</option>)}
-                 </select>
-             </div>
+      <FilterSection id="specs" title="Teknik Özellikler" icon={Cpu}>
+          <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">İŞLEMCİ</label>
+              <select value={filters.processor || ''} onChange={(e) => updateFilter('processor', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Seçiniz</option>
+                  {processors.map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+          </div>
+          <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">RAM</label>
+              <select value={filters.ram || ''} onChange={(e) => updateFilter('ram', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Seçiniz</option>
+                  {ramOptions.map(r => <option key={r} value={r}>{r}</option>)}
+              </select>
+          </div>
+          <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">DEPOLAMA (SSD)</label>
+              <select value={filters.ssd_capacity || ''} onChange={(e) => updateFilter('ssd_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Seçiniz</option>
+                  {ssdCapacities.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+          </div>
+          <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">EKRAN KARTI</label>
+              <select value={filters.gpu_capacity || ''} onChange={(e) => updateFilter('gpu_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Seçiniz</option>
+                  {gpuCapacities.map(g => <option key={g} value={g}>{g}</option>)}
+              </select>
+          </div>
+      </FilterSection>
 
-             <div>
-                 <label className="text-[10px] font-bold text-gray-500 mb-1 block">MODEL</label>
-                 <select value={filters.model || ''} onChange={(e) => updateFilter('model', e.target.value)} disabled={!selectedSeriesLocal} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 focus:border-blue-500 outline-none bg-white disabled:bg-gray-100 disabled:text-gray-400">
-                     <option value="">Seçiniz</option>
-                     {modelList.map(m => <option key={m} value={m}>{m}</option>)}
-                 </select>
-             </div>
+      <FilterSection id="screen" title="Ekran" icon={Monitor}>
+          <div>
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">EKRAN BOYUTU</label>
+              <select value={filters.screen_size || ''} onChange={(e) => updateFilter('screen_size', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Seçiniz</option>
+                  {screenSizes.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+          </div>
+      </FilterSection>
 
-             <div><label className="text-[10px] font-bold text-gray-500 mb-1 block">YIL</label><div className="flex gap-2"><input type="number" placeholder="Min" value={filters.minYear || ''} onChange={(e) => updateFilter('minYear', e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 outline-none focus:border-blue-500" /><input type="number" placeholder="Max" value={filters.maxYear || ''} onChange={(e) => updateFilter('maxYear', e.target.value)} className="w-full border border-gray-300 rounded-sm text-[11px] h-8 px-2 outline-none focus:border-blue-500" /></div></div>
-          </FilterSection>
-
-          <FilterSection id="vehicle_tech" title="Araç Özellikleri">
-              <SelectInput label="YAKIT" name="fuel" options={fuelTypes} />
-              <SelectInput label="VİTES" name="gear" options={gearTypes} />
-              <SelectInput label="KASA TİPİ" name="body_type" options={bodyTypes} />
-              <SelectInput label="RENK" name="color" options={colors} />
-              <SelectInput label="KİMDEN" name="seller_type" options={sellerTypes} />
-          </FilterSection>
-        </>
-      )}
     </div>
   );
 }

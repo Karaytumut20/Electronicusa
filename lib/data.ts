@@ -1,91 +1,52 @@
-import { Home, Car, Monitor, Briefcase, ShoppingCart, Map, Sun, Smartphone, Camera, Shirt, Watch, Baby, Gamepad2, BookOpen, Music, Dumbbell, Gem, Hammer, PenTool, Coffee } from 'lucide-react';
+import { Monitor, Smartphone, Camera, Tv, Gamepad2, Plug, Cpu, Laptop, Watch, Headphones, Speaker, Shield, Zap, Wifi, Disc, Keyboard, Mouse, Bot, Plane } from 'lucide-react';
 
 export const categories = [
   {
-    id: 'emlak', title: 'Emlak', icon: 'Home', slug: 'emlak',
+    id: 'bilgisayar', title: 'Bilgisayar', icon: 'Monitor', slug: 'bilgisayar',
     subs: [
-      { id: 'konut', title: 'Konut', slug: 'konut', subs: [{ id: 'konut-satilik', title: 'Satılık', slug: 'konut-satilik' }, { id: 'konut-kiralik', title: 'Kiralık', slug: 'konut-kiralik' }] },
-      { id: 'isyeri', title: 'İş Yeri', slug: 'isyeri', subs: [{ id: 'isyeri-satilik', title: 'Satılık İş Yeri', slug: 'isyeri-satilik' }] },
-      { id: 'arsa', title: 'Arsa', slug: 'arsa' }
+      { id: 'laptop', title: 'Laptop / Notebook', slug: 'laptop', icon: 'Laptop' },
+      { id: 'masaustu', title: 'Masaüstü PC', slug: 'masaustu', icon: 'Monitor' },
+      { id: 'tablet', title: 'Tablet', slug: 'tablet', icon: 'Tablet' },
+      { id: 'bilesenler', title: 'PC Bileşenleri', slug: 'bilesenler', icon: 'Cpu' },
+      { id: 'ekipman', title: 'Oyuncu Ekipmanları', slug: 'oyuncu-ekipman', icon: 'Keyboard' }
     ]
   },
   {
-    id: 'vasita', title: 'Vasıta', icon: 'Car', slug: 'vasita',
+    id: 'telefon', title: 'Telefon & Aksesuar', icon: 'Smartphone', slug: 'telefon',
     subs: [
-      { id: 'oto', title: 'Otomobil', slug: 'otomobil' },
-      { id: 'suv', title: 'Arazi, SUV & Pickup', slug: 'arazi-suv-pickup' },
-      { id: 'moto', title: 'Motosiklet', slug: 'motosiklet' },
+      { id: 'cep', title: 'Cep Telefonu', slug: 'cep-telefonu', icon: 'Smartphone' },
+      { id: 'giyilebilir', title: 'Akıllı Saat', slug: 'giyilebilir', icon: 'Watch' },
+      { id: 'kilif', title: 'Kılıf & Koruyucu', slug: 'kilif', icon: 'Shield' }
     ]
   },
   {
-    id: 'alisveris', title: 'İkinci El ve Sıfır Alışveriş', icon: 'ShoppingCart', slug: 'alisveris',
+    id: 'oyun', title: 'Oyun & Konsol', icon: 'Gamepad2', slug: 'oyun',
     subs: [
-      {
-        id: 'bilgisayar', title: 'Bilgisayar', slug: 'bilgisayar',
-        subs: [
-            {
-                id: 'dizustu', title: 'Dizüstü (Notebook)', slug: 'dizustu',
-                subs: [
-                    { id: 'laptop', title: 'Laptop', slug: 'laptop' },
-                    {
-                        id: 'notebook-donanim', title: 'Dizüstü Donanım', slug: 'dizustu-donanim',
-                        subs: [
-                            { id: 'd-islemci', title: 'İşlemci', slug: 'dizustu-islemci' },
-                            { id: 'd-ram', title: 'RAM Bellek', slug: 'dizustu-ram' },
-                            { id: 'd-disk', title: 'Harddisk', slug: 'dizustu-hdd' },
-                            { id: 'd-ssd', title: 'SSD', slug: 'dizustu-ssd' }
-                        ]
-                    },
-                    {
-                        id: 'notebook-yedek', title: 'Yedek Parça', slug: 'dizustu-yedek',
-                        subs: [
-                            { id: 'd-anakart', title: 'Anakart', slug: 'dizustu-anakart' },
-                            { id: 'd-ekran', title: 'Ekran', slug: 'dizustu-ekran' },
-                            { id: 'd-klavye', title: 'Klavye', slug: 'dizustu-klavye' },
-                            { id: 'd-batarya', title: 'Batarya', slug: 'dizustu-batarya' },
-                            { id: 'd-kasa', title: 'Kasa & Parçaları', slug: 'dizustu-kasa' }
-                        ]
-                    }
-                ]
-            },
-            {
-                id: 'masaustu', title: 'Masaüstü', slug: 'masaustu',
-                subs: [
-                    { id: 'masaustu-model', title: 'Modeller', slug: 'masaustu-modeller' },
-                    {
-                        id: 'masaustu-donanim', title: 'Masaüstü Donanım', slug: 'masaustu-donanim',
-                        subs: [
-                             { id: 'm-anakart', title: 'Anakart', slug: 'masaustu-anakart' },
-                             { id: 'm-islemci', title: 'İşlemci', slug: 'masaustu-islemci' },
-                             { id: 'm-ram', title: 'RAM Bellek', slug: 'masaustu-ram' },
-                             { id: 'm-ekran-karti', title: 'Ekran Kartı', slug: 'masaustu-ekran-karti' },
-                             { id: 'm-kasa', title: 'Kasa', slug: 'masaustu-kasa' },
-                             { id: 'm-guc', title: 'Güç Kaynağı', slug: 'masaustu-psu' },
-                             { id: 'm-monitor', title: 'Monitör', slug: 'monitor' }
-                        ]
-                    }
-                ]
-            },
-            { id: 'tablet', title: 'Tablet', slug: 'tablet' },
-            { id: 'sunucu', title: 'Sunucu (Server)', slug: 'sunucu' },
-        ]
-      },
-      { id: 'phone', title: 'Cep Telefonu & Aksesuar', slug: 'cep-telefonu', icon: 'Smartphone' },
-      { id: 'foto', title: 'Fotoğraf & Kamera', slug: 'fotograf-kamera', icon: 'Camera' },
-      { id: 'ev', title: 'Ev Dekorasyon', slug: 'ev-dekorasyon', icon: 'Home' },
-      { id: 'giyim', title: 'Giyim & Aksesuar', slug: 'giyim', icon: 'Shirt' },
-      { id: 'saat', title: 'Saat', slug: 'saat', icon: 'Watch' },
-      { id: 'anne', title: 'Anne & Bebek', slug: 'anne-bebek', icon: 'Baby' },
-      { id: 'oyun', title: 'Hobi & Oyuncak', slug: 'hobi-oyuncak', icon: 'Gamepad2' },
-      { id: 'kitap', title: 'Kitap, Dergi & Film', slug: 'kitap', icon: 'BookOpen' },
-      { id: 'muzik', title: 'Müzik', slug: 'muzik', icon: 'Music' },
-      { id: 'spor', title: 'Spor', slug: 'spor', icon: 'Dumbbell' },
-      { id: 'taki', title: 'Takı & Mücevher', slug: 'taki', icon: 'Gem' },
-      { id: 'yapi', title: 'Bahçe & Yapı Market', slug: 'yapi-market', icon: 'Hammer' },
-      { id: 'ofis', title: 'Ofis & Kırtasiye', slug: 'ofis', icon: 'PenTool' },
-      { id: 'gida', title: 'Yiyecek & İçecek', slug: 'gida', icon: 'Coffee' },
+      { id: 'konsol', title: 'Oyun Konsolları', slug: 'konsol', icon: 'Gamepad2' },
+      { id: 'oyunlar', title: 'Oyunlar', slug: 'video-oyun', icon: 'Disc' }
+    ]
+  },
+  {
+    id: 'tv-ses', title: 'TV & Ses', icon: 'Tv', slug: 'tv-ses',
+    subs: [
+      { id: 'tv', title: 'Televizyon', slug: 'televizyon', icon: 'Tv' },
+      { id: 'kulaklik', title: 'Kulaklık', slug: 'kulaklik', icon: 'Headphones' },
+      { id: 'hoparlor', title: 'Hoparlör', slug: 'hoparlor', icon: 'Speaker' }
+    ]
+  },
+  {
+    id: 'kamera', title: 'Kamera', icon: 'Camera', slug: 'kamera',
+    subs: [
+      { id: 'dslr', title: 'Dijital Kamera', slug: 'dslr', icon: 'Camera' },
+      { id: 'drone', title: 'Drone', slug: 'drone', icon: 'Plane' }
+    ]
+  },
+  {
+    id: 'akilli-ev', title: 'Akıllı Ev', icon: 'Zap', slug: 'akilli-ev',
+    subs: [
+        { id: 'robot', title: 'Robot Süpürge', slug: 'robot-supurge', icon: 'Bot' }
     ]
   }
 ];
 
-export const cities = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Adana', 'Konya', 'Gaziantep', 'Şanlıurfa', 'Kocaeli'];
+export const cities = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Kocaeli', 'Adana', 'Eskişehir'];

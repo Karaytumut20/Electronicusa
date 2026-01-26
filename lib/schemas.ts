@@ -11,33 +11,9 @@ export const adSchema = z.object({
   image: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
 
-  // Emlak
-  room: z.string().optional().nullable(),
-  m2: z.number().optional().nullable(),
-  floor: z.number().optional().nullable(),
-  heating: z.string().optional().nullable(),
-
-  // Vasıta
+  // Elektronik Özellikleri
   brand: z.string().optional().nullable(),
-  series: z.string().optional().nullable(),
   model: z.string().optional().nullable(),
-  year: z.number().optional().nullable(),
-  km: z.number().optional().nullable(),
-  gear: z.string().optional().nullable(),
-  fuel: z.string().optional().nullable(),
-  body_type: z.string().optional().nullable(),
-  motor_power: z.string().optional().nullable(),
-  engine_capacity: z.string().optional().nullable(),
-  traction: z.string().optional().nullable(),
-  color: z.string().optional().nullable(),
-  warranty: z.boolean().optional().nullable(),
-  exchange: z.boolean().optional().nullable(),
-  plate_type: z.string().optional().nullable(),
-  seller_type: z.string().optional().nullable(),
-  vehicle_status: z.string().optional().nullable(),
-  heavy_damage: z.boolean().optional().nullable(),
-
-  // Bilgisayar (YENİ)
   processor: z.string().optional().nullable(),
   ram: z.string().optional().nullable(),
   screen_size: z.string().optional().nullable(),
@@ -45,15 +21,13 @@ export const adSchema = z.object({
   resolution: z.string().optional().nullable(),
   ssd_capacity: z.string().optional().nullable(),
 
-  technical_specs: z.any().optional().nullable()
+  // Eski alanlar (Hata önlemek için optional tutuldu ama arayüzden kaldırılacak)
+  year: z.any().optional().nullable(),
+  km: z.any().optional().nullable(),
+  m2: z.any().optional().nullable(),
+  room: z.any().optional().nullable(),
 
-}).superRefine((data, ctx) => {
-  if (data.category.includes('konut') || data.category.includes('isyeri')) {
-    if (!data.m2) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Metrekare zorunludur", path: ['m2'] });
-  }
-  if (data.category.includes('otomobil') || data.category.includes('suv')) {
-    if (!data.brand) ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Marka zorunludur", path: ['brand'] });
-  }
+  technical_specs: z.any().optional().nullable()
 });
 
 export type AdFormValues = z.infer<typeof adSchema>;
