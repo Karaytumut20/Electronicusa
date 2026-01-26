@@ -5,391 +5,75 @@ const colors = {
   reset: "\x1b[0m",
   green: "\x1b[32m",
   blue: "\x1b[34m",
-  yellow: "\x1b[33m",
   bold: "\x1b[1m",
 };
 
 console.log(
   colors.blue +
     colors.bold +
-    "\n🔧  FIXING 'MISSING PROFILE' ERROR & REGISTRATION FLOW...\n" +
+    "\n📱 MODERN MOBİL UYUMLULUK VE KATEGORİ SİSTEMİ KURULUYOR...\n" +
     colors.reset,
 );
 
 // ---------------------------------------------------------
-// 1. SERVICES UPDATE (Self-Healing Profile Logic)
+// 1. ANA SAYFA GÜNCELLEMESİ (app/page.tsx)
+// Kategori listesini mobilde en üste yatay şerit olarak ekler.
 // ---------------------------------------------------------
-const servicesContent = `
-import { createClient } from '@/lib/supabase/client';
-
-const supabase = createClient();
-
-// --- STORAGE ---
-export async function uploadImageClient(file: File) {
-  const fileExt = file.name.split('.').pop();
-  const fileName = \`\${Date.now()}-\${Math.random().toString(36).substring(2, 9)}.\${fileExt}\`;
-
-  const { data, error } = await supabase.storage
-    .from('ads')
-    .upload(fileName, file);
-
-  if (error) throw error;
-
-  const { data: publicUrlData } = supabase.storage.from('ads').getPublicUrl(fileName);
-  return publicUrlData.publicUrl;
-}
-
-// --- ADS & FAVORITES ---
-export async function getUserAdsClient(userId: string) {
-  const { data, error } = await supabase
-    .from('ads')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-    console.error('Error fetching user ads:', error);
-    return [];
-  }
-  return data;
-}
-
-export async function updateAdStatusClient(id: number, status: string) {
-  return await supabase.from('ads').update({ status }).eq('id', id);
-}
-
-export async function getFavoritesClient(userId: string) {
-  const { data, error } = await supabase
-    .from('favorites')
-    .select('ad_id, ads(*)')
-    .eq('user_id', userId);
-
-  if (error) {
-    console.error('Error fetching favorites:', error);
-    return [];
-  }
-
-  return data ? data.filter((i: any) => i.ads).map((i: any) => i.ads) : [];
-}
-
-export async function toggleFavoriteClient(userId: string, adId: number) {
-  const { data } = await supabase
-    .from('favorites')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('ad_id', adId)
-    .single();
-
-  if (data) {
-    await supabase.from('favorites').delete().eq('id', data.id);
-    return false;
-  } else {
-    await supabase.from('favorites').insert([{ user_id: userId, ad_id: adId }]);
-    return true;
-  }
-}
-
-// --- PROFILE & REVIEWS ---
-export async function getProfileClient(userId: string) {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
-
-  if (error) return null;
-  return data;
-}
-
-export async function getReviewsClient(targetId: string) {
-  const { data } = await supabase
-    .from('reviews')
-    .select('*, reviewer:reviewer_id(full_name, avatar_url)')
-    .eq('target_id', targetId)
-    .order('created_at', { ascending: false });
-  return data || [];
-}
-
-export async function addReviewClient(targetId: string, rating: number, comment: string, reviewerId: string) {
-  if (targetId === reviewerId) return { error: { message: 'You cannot review yourself.' } };
-  return await supabase.from('reviews').insert([{ target_id: targetId, reviewer_id: reviewerId, rating, comment }]);
-}
-
-// --- SEARCHES ---
-export async function getSavedSearchesClient(userId: string) {
-    const { data } = await supabase.from('saved_searches').select('*').eq('user_id', userId).order('created_at', { ascending: false });
-    return data || [];
-}
-
-export async function deleteSavedSearchClient(id: number) {
-    await supabase.from('saved_searches').delete().eq('id', id);
-}
-
-// --- MESSAGING (WITH SELF-HEALING PROFILE LOGIC) ---
-export async function startConversationClient(adId: number, buyerId: string, sellerId: string) {
-  try {
-    // 1. Check existing
-    const { data: existing, error: fetchError } = await supabase
-      .from('conversations')
-      .select('*')
-      .eq('ad_id', adId)
-      .eq('buyer_id', buyerId)
-      .eq('seller_id', sellerId)
-      .maybeSingle();
-
-    if (fetchError) {
-        console.error("Check Conv Error:", fetchError);
-        return { data: null, error: fetchError };
-    }
-
-    if (existing) return { data: existing, error: null };
-
-    // 2. Create new conversation
-    const { data, error } = await supabase
-      .from('conversations')
-      .insert([{ ad_id: adId, buyer_id: buyerId, seller_id: sellerId }])
-      .select()
-      .single();
-
-    if (error) {
-        // --- AUTO FIX: CREATE MISSING PROFILE ---
-        // Error 23503: Foreign key violation (Key (buyer_id)=... is not present in table "profiles")
-        if (error.code === '23503' && error.message.includes('profiles')) {
-            console.warn("⚠️ Profile missing for user. Attempting to auto-create...");
-
-            // Get current user info
-            const { data: { user } } = await supabase.auth.getUser();
-
-            if (user && user.id === buyerId) {
-                 const { error: createProfileError } = await supabase.from('profiles').upsert({
-                    id: user.id,
-                    email: user.email,
-                    full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
-                    role: 'user',
-                    phone: user.user_metadata?.phone || ''
-                 });
-
-                 if (createProfileError) {
-                     console.error("❌ Failed to auto-create profile:", createProfileError);
-                     return { data: null, error };
-                 }
-
-                 console.log("✅ Profile auto-created. Retrying conversation...");
-
-                 // Retry conversation creation
-                 const { data: retryData, error: retryError } = await supabase
-                    .from('conversations')
-                    .insert([{ ad_id: adId, buyer_id: buyerId, seller_id: sellerId }])
-                    .select()
-                    .single();
-
-                 return { data: retryData, error: retryError };
-            }
-        }
-        // --- END AUTO FIX ---
-
-        console.error("Create Conv Error:", error);
-        return { data: null, error };
-    }
-
-    return { data, error: null };
-  } catch (err: any) {
-    console.error("Start Conversation Exception:", err);
-    return { data: null, error: err };
-  }
-}
-
-export async function getConversationsClient(userId: string) {
-  const { data, error } = await supabase
-    .from('conversations')
-    .select('*, ads(id, title, image, price, currency, city, district), profiles:buyer_id(full_name), seller:seller_id(full_name)')
-    .or(\`buyer_id.eq.\${userId},seller_id.eq.\${userId}\`)
-    .order('updated_at', { ascending: false });
-
-  if (error) {
-    console.error("Get Conversations Error:", error);
-    return [];
-  }
-  return data;
-}
-
-export async function getMessagesClient(conversationId: number) {
-  const { data, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('conversation_id', conversationId)
-    .order('created_at', { ascending: true });
-
-  if (error) return [];
-  return data;
-}
-
-export async function sendMessageClient(conversationId: number, senderId: string, content: string) {
-  const { data, error } = await supabase
-    .from('messages')
-    .insert([{ conversation_id: conversationId, sender_id: senderId, content }])
-    .select()
-    .single();
-
-  if (!error) {
-    await supabase
-      .from('conversations')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', conversationId);
-  }
-
-  return { data, error };
-}
-
-export async function markMessagesAsReadClient(conversationId: number, userId: string) {
-  await supabase
-    .from('messages')
-    .update({ is_read: true })
-    .eq('conversation_id', conversationId)
-    .neq('sender_id', userId);
-}
-
-// --- NOTIFICATIONS ---
-export async function getNotificationsClient(userId: string) {
-  const { data } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false })
-    .limit(20);
-  return data || [];
-}
-
-export async function markNotificationReadClient(id: number) {
-  await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-}
-
-export async function markAllNotificationsReadClient(userId: string) {
-  await supabase.from('notifications').update({ is_read: true }).eq('user_id', userId);
-}
-
-export async function createNotificationClient(userId: string, title: string, message: string) {
-  const { error } = await supabase
-    .from('notifications')
-    .insert([{ user_id: userId, title, message }]);
-
-  if (error) console.error("Notification Error:", error);
-}
-`;
-
-// ---------------------------------------------------------
-// 2. REGISTER PAGE UPDATE (Ensure Profile Creation)
-// ---------------------------------------------------------
-const registerPageContent = `
-"use client";
-import React, { useState } from 'react';
+const pageContent = `
+import React from 'react';
+import Sidebar from "@/components/Sidebar";
+import HomeFeed from "@/components/HomeFeed";
+import { getInfiniteAdsAction, getCategoryTreeServer } from "@/lib/actions";
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { useToast } from '@/context/ToastContext';
-import { Loader2 } from 'lucide-react';
+import { LayoutGrid } from 'lucide-react';
 
-export default function RegisterPage() {
-  const router = useRouter();
-  const { addToast } = useToast();
-  const [form, setForm] = useState({ name: '', surname: '', email: '', phone: '', password: '' });
-  const [loading, setLoading] = useState(false);
+export const revalidate = 0;
 
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-
-    const cleanPhone = form.phone.replace(/\\s/g, '');
-    const fullName = \`\${form.name} \${form.surname}\`.trim();
-
-    // 1. Sign Up
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: {
-        data: {
-          full_name: fullName,
-          phone: cleanPhone,
-        },
-      },
-    });
-
-    if (error) {
-      addToast(error.message, 'error');
-    } else {
-      // 2. Explicitly Create Profile (Upsert to be safe)
-      if (data.user) {
-          const { error: profileError } = await supabase.from('profiles').upsert({
-              id: data.user.id,
-              email: form.email,
-              full_name: fullName,
-              phone: cleanPhone,
-              role: 'user',
-              show_phone: false
-          });
-
-          if (profileError) {
-              console.error("Profile creation failed:", profileError);
-              // Don't block registration success, but log it.
-          }
-      }
-
-      addToast('Registration successful! You can now login.', 'success');
-      router.push('/login');
-    }
-    setLoading(false);
-  };
+export default async function Home() {
+  const { data: initialAds } = await getInfiniteAdsAction(1, 20);
+  const categories = await getCategoryTreeServer();
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-10 bg-[#f6f7f9] px-4">
-      <div className="bg-white border border-gray-200 shadow-sm rounded-sm w-full max-w-[500px] overflow-hidden">
-        <div className="p-8">
-          <h2 className="text-xl font-bold text-[#333] mb-2 text-center">Create Account</h2>
-          <form onSubmit={handleRegister} className="space-y-4 mt-6">
+    <div className="container mx-auto px-4 py-4 md:py-8 max-w-7xl font-sans">
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-[12px] font-bold text-[#333] mb-1">Name</label>
-                <input type="text" onChange={e => setForm({...form, name: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
-              </div>
-              <div>
-                <label className="block text-[12px] font-bold text-[#333] mb-1">Surname</label>
-                <input type="text" onChange={e => setForm({...form, surname: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-[12px] font-bold text-[#333] mb-1">Mobile Phone</label>
-              <input
-                type="tel"
-                placeholder="+1 555..."
-                onChange={e => setForm({...form, phone: e.target.value})}
-                className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm"
-                required
-              />
-              <p className="text-[10px] text-gray-500 mt-1">* Required for communication with buyers.</p>
-            </div>
-
-            <div>
-              <label className="block text-[12px] font-bold text-[#333] mb-1">Email</label>
-              <input type="email" onChange={e => setForm({...form, email: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
-            </div>
-
-            <div>
-              <label className="block text-[12px] font-bold text-[#333] mb-1">Password</label>
-              <input type="password" onChange={e => setForm({...form, password: e.target.value})} className="w-full border border-gray-300 rounded-sm h-[38px] px-3 focus:border-indigo-500 outline-none text-sm" required />
-            </div>
-
-            <button disabled={loading} className="w-full bg-indigo-600 text-white font-bold h-[44px] rounded-sm hover:bg-indigo-700 transition-colors shadow-sm mt-4 text-sm disabled:opacity-50 flex items-center justify-center gap-2">
-              {loading ? <Loader2 size={18} className="animate-spin" /> : 'Create Account'}
-            </button>
-          </form>
-
-          <div className="mt-6 text-center">
-            <span className="text-[12px] text-gray-500">Already a member? </span>
-            <Link href="/login" className="text-indigo-600 font-bold text-[12px] hover:underline">Login</Link>
-          </div>
+      {/* MOBİL KATEGORİ ŞERİDİ (Sadece Mobilde Görünür) */}
+      <div className="lg:hidden mb-6">
+        <div className="flex items-center justify-between mb-3 px-1">
+          <h2 className="text-sm font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+            <LayoutGrid size={16} className="text-indigo-600" /> Kategoriler
+          </h2>
+          <Link href="/search" className="text-xs font-bold text-indigo-600">Tümü</Link>
         </div>
+
+        <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+          {categories.map((cat) => (
+            <Link
+              key={cat.id}
+              href={\`/search?category=\${cat.slug}\`}
+              className="flex flex-col items-center gap-2 min-w-[80px] group"
+            >
+              <div className="w-14 h-14 bg-white border border-slate-100 rounded-2xl shadow-sm flex items-center justify-center text-indigo-600 group-active:scale-95 transition-transform">
+                {/* İkon ataması Sidebar mantığı ile aynı */}
+                <span className="font-bold text-xl">{cat.title.charAt(0)}</span>
+              </div>
+              <span className="text-[10px] font-bold text-slate-600 text-center leading-tight line-clamp-1">{cat.title}</span>
+            </Link>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* DESKTOP SIDEBAR */}
+        <aside className="hidden lg:block lg:col-span-3 xl:col-span-2">
+          <div className="sticky top-24">
+            <Sidebar categories={categories} />
+          </div>
+        </aside>
+
+        {/* ANA İÇERİK */}
+        <main className="lg:col-span-9 xl:col-span-10 min-w-0">
+          <HomeFeed initialAds={initialAds} />
+        </main>
       </div>
     </div>
   );
@@ -397,66 +81,232 @@ export default function RegisterPage() {
 `;
 
 // ---------------------------------------------------------
-// 3. SQL TRIGGER FIX (supabase/fix_profile_trigger_final.sql)
+// 2. HEADER GÜNCELLEMESİ (components/Header.tsx)
+// Mobil arama ve menü butonlarını iyileştirir.
 // ---------------------------------------------------------
-const sqlTriggerContent = `
--- ⚠️ BU KODU SUPABASE SQL EDITOR'DE ÇALIŞTIRIN ⚠️
+const headerContent = `
+"use client";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Search, Plus, User, LogOut, Menu, X } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import MobileMenu from './MobileMenu';
 
--- 1. Mevcut trigger ve fonksiyonu temizle
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP FUNCTION IF EXISTS public.handle_new_user();
+export default function Header() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const router = useRouter();
+  const { user, logout } = useAuth();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
--- 2. Fonksiyonu yeniden oluştur (Daha sağlam)
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name, role, avatar_url)
-  VALUES (
-    new.id,
-    new.email,
-    COALESCE(new.raw_user_meta_data->>'full_name', new.email),
-    'user',
-    ''
-  )
-  ON CONFLICT (id) DO NOTHING; -- Zaten varsa hata verme
-  RETURN new;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) router.push(\`/search?q=\${encodeURIComponent(searchTerm)}\`);
+  };
 
--- 3. Trigger'ı yeniden oluştur
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();
+  return (
+    <>
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 h-[70px] md:h-[80px] flex items-center justify-center sticky top-0 z-50 transition-all">
+        <div className="container max-w-7xl flex items-center justify-between px-4 md:px-6 h-full gap-4">
 
--- 4. Manuel Düzeltme: Profil tablosunda olmayan kullanıcıları ekle
-INSERT INTO public.profiles (id, email, full_name, role)
-SELECT id, email, COALESCE(raw_user_meta_data->>'full_name', email), 'user'
-FROM auth.users
-WHERE id NOT IN (SELECT id FROM public.profiles)
-ON CONFLICT DO NOTHING;
+          {/* SOL: LOGO & MENU TOGGLE */}
+          <div className="flex items-center gap-2 md:gap-4">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 -ml-2 text-slate-600 active:bg-slate-100 rounded-full"
+            >
+              <Menu size={24} />
+            </button>
+            <Link href="/" className="flex items-center gap-2 group shrink-0">
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-lg shadow-indigo-200">E</div>
+              <span className="font-black text-lg md:text-2xl tracking-tighter text-slate-800 hidden xs:block">
+                Electronic<span className="text-indigo-600">USA</span>
+              </span>
+            </Link>
+          </div>
+
+          {/* ORTA: ARAMA (Masaüstü) */}
+          <div className="flex-1 max-w-[500px] hidden lg:block">
+            <form onSubmit={handleSearch} className="relative group">
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Marka, model veya ürün ara..."
+                className="w-full h-[46px] pl-12 pr-4 bg-slate-100 border-transparent rounded-full focus:bg-white focus:ring-4 focus:ring-indigo-50 focus:border-indigo-500 transition-all text-sm outline-none"
+              />
+              <Search size={18} className="absolute left-4 top-[14px] text-slate-400 group-focus-within:text-indigo-600" />
+            </form>
+          </div>
+
+          {/* SAĞ: AKSİYONLAR */}
+          <div className="flex items-center gap-2 md:gap-4">
+            <Link href="/post-ad" className="bg-indigo-600 text-white p-2.5 md:px-5 md:py-2.5 rounded-full md:rounded-xl text-sm font-bold hover:bg-indigo-700 transition-all flex items-center gap-2 shadow-md shadow-indigo-100">
+              <Plus size={20}/> <span className="hidden md:inline">İlan Ver</span>
+            </Link>
+
+            <div className="h-8 w-px bg-slate-200 hidden md:block"></div>
+
+            {!user ? (
+              <div className="flex items-center gap-2 md:gap-4">
+                <Link href="/login" className="text-slate-600 hover:text-indigo-600 text-sm font-bold px-2">Giriş</Link>
+                <Link href="/register" className="hidden sm:block text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl text-sm font-bold hover:bg-indigo-100">Kayıt Ol</Link>
+              </div>
+            ) : (
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden"
+                >
+                  {user.avatar ? (
+                    <img src={user.avatar} className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={20} className="text-slate-600" />
+                  )}
+                </button>
+
+                {userMenuOpen && (
+                  <div className="absolute right-0 top-full mt-3 w-56 bg-white border border-slate-100 rounded-2xl shadow-2xl py-2 z-50 animate-in fade-in slide-in-from-top-2">
+                    <div className="px-4 py-3 border-b border-slate-50">
+                      <p className="text-xs text-slate-400 font-bold uppercase">Hesabım</p>
+                      <p className="text-sm font-bold text-slate-800 truncate">{user.name}</p>
+                    </div>
+                    <Link href="/dashboard" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 hover:bg-indigo-50 text-sm text-slate-700 transition-colors">Panelim</Link>
+                    <Link href="/dashboard/my-ads" onClick={() => setUserMenuOpen(false)} className="block px-4 py-2.5 hover:bg-indigo-50 text-sm text-slate-700 transition-colors">İlanlarım</Link>
+                    <div className="border-t border-slate-50 mt-2 pt-2">
+                      <button onClick={logout} className="w-full text-left px-4 py-2.5 hover:bg-red-50 text-sm text-red-600 flex items-center gap-2 font-bold transition-colors">
+                        <LogOut size={16}/> Çıkış Yap
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* MOBİL ARAMA ÇUBUĞU (Sadece Mobilde Logo Altında) */}
+      <div className="lg:hidden bg-white px-4 pb-3 border-b border-slate-100 sticky top-[70px] z-[45]">
+        <form onSubmit={handleSearch} className="relative">
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Ne aramıştınız?"
+            className="w-full h-[40px] pl-10 pr-4 bg-slate-100 rounded-lg text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+          />
+          <Search size={16} className="absolute left-3 top-[12px] text-slate-400" />
+        </form>
+      </div>
+
+      <MobileMenu isOpen={isMobileMenuOpen} onClose={() => setIsMobileMenuOpen(false)} />
+    </>
+  );
+}
 `;
 
-const filesToWrite = [
-  { path: "lib/services.ts", content: servicesContent },
-  { path: "app/register/page.tsx", content: registerPageContent },
-  {
-    path: "supabase/fix_profile_trigger_final.sql",
-    content: sqlTriggerContent,
-  },
+// ---------------------------------------------------------
+// 3. AD CARD GÜNCELLEMESİ (components/AdCard.tsx)
+// Mobilde daha fazla bilgi sığdırmak için fontları ve boşlukları küçültür.
+// ---------------------------------------------------------
+const adCardContent = `
+"use client";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { MapPin, Star, Zap } from 'lucide-react';
+import { formatPrice } from '@/lib/utils';
+import { useFavorites } from '@/context/FavoritesContext';
+
+export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: string }) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const liked = isFavorite(ad.id);
+
+  const priceDisplay = formatPrice(ad.price, ad.currency);
+  const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=Resim+Yok';
+
+  return (
+    <Link href={\`/ilan/\${ad.id}\`} className="group block h-full">
+      <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
+
+        {/* RESİM ALANI */}
+        <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-slate-50">
+          <Image
+            src={imageUrl}
+            alt={ad.title}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
+            sizes="(max-width: 768px) 50vw, 25vw"
+          />
+
+          {/* BADGES */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+            {ad.is_urgent && (
+              <span className="bg-rose-500 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg">
+                <Zap size={10} fill="currentColor"/> ACİL
+              </span>
+            )}
+            {ad.is_vitrin && (
+              <span className="bg-yellow-400 text-black text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg">
+                VİTRİN
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(ad.id); }}
+            className="absolute top-2 right-2 z-20 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-md text-slate-400 hover:text-rose-500 transition-colors"
+          >
+            <Star size={16} className={liked ? "fill-rose-500 text-rose-500" : ""} />
+          </button>
+        </div>
+
+        {/* İÇERİK ALANI */}
+        <div className="p-2.5 md:p-4 flex-1 flex flex-col">
+          <h3 className="font-bold text-slate-800 text-[11px] md:text-sm leading-tight line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+            {ad.title}
+          </h3>
+
+          <div className="mt-auto">
+            <div className="text-indigo-700 font-black text-[13px] md:text-lg tracking-tight">
+              {priceDisplay}
+            </div>
+            <div className="flex justify-between items-center mt-1 border-t border-slate-50 pt-1.5 text-[9px] md:text-[10px] text-slate-400">
+              <span className="flex items-center gap-0.5 truncate max-w-[70%] italic">
+                <MapPin size={10} /> {ad.city}
+              </span>
+              <span className="font-medium whitespace-nowrap">
+                {new Date(ad.created_at).toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' })}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+`;
+
+const files = [
+  { path: "app/page.tsx", content: pageContent },
+  { path: "components/Header.tsx", content: headerContent },
+  { path: "components/AdCard.tsx", content: adCardContent },
 ];
 
-filesToWrite.forEach((file) => {
+files.forEach((file) => {
   try {
-    const dir = path.dirname(file.path);
+    const filePath = path.join(process.cwd(), file.path);
+    const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-
-    fs.writeFileSync(path.join(process.cwd(), file.path), file.content.trim());
+    fs.writeFileSync(filePath, file.content.trim());
     console.log(
-      colors.green + "✔ " + file.path + " updated successfully." + colors.reset,
+      colors.green + "✔ " + file.path + " revize edildi." + colors.reset,
     );
-  } catch (e) {
+  } catch (err) {
     console.error(
-      colors.yellow + "✘ " + file.path + " failed: " + e.message + colors.reset,
+      colors.bold + "✘ " + file.path + " hata:" + err.message + colors.reset,
     );
   }
 });
@@ -464,9 +314,9 @@ filesToWrite.forEach((file) => {
 console.log(
   colors.blue +
     colors.bold +
-    "\n✅ AUTO-PROFILE CREATION ENABLED!" +
+    "\n✅ TASARIM FULL MOBİL UYUMLU HALE GETİRİLDİ!" +
     colors.reset,
 );
 console.log(
-  "👉 IMPORTANT: Run 'supabase/fix_profile_trigger_final.sql' in Supabase SQL Editor to fix existing users.",
+  "👉 Değişikliklerin etkili olması için 'npm run dev' komutunu tekrar çalıştırın.",
 );
