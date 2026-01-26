@@ -11,7 +11,7 @@ export const adSchema = z.object({
   image: z.string().nullable().optional(),
   images: z.array(z.string()).optional(),
 
-  // Elektronik Özellikleri
+  // Elektronik Alanları (Opsiyonel bırakıldı, formda required kontrol edilebilir)
   brand: z.string().optional().nullable(),
   model: z.string().optional().nullable(),
   processor: z.string().optional().nullable(),
@@ -21,12 +21,11 @@ export const adSchema = z.object({
   resolution: z.string().optional().nullable(),
   ssd_capacity: z.string().optional().nullable(),
 
-  // Eski alanlar (Hata önlemek için optional tutuldu ama arayüzden kaldırılacak)
+  // Eski alanlar (Pasife çekildi)
   year: z.any().optional().nullable(),
   km: z.any().optional().nullable(),
   m2: z.any().optional().nullable(),
   room: z.any().optional().nullable(),
-
   technical_specs: z.any().optional().nullable()
 });
 
