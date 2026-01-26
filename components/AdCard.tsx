@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Star, Zap } from 'lucide-react'; // Heart -> Star
+import { MapPin, Star, Zap } from 'lucide-react';
 import { formatPrice, formatDate } from '@/lib/utils';
 import { useFavorites } from '@/context/FavoritesContext';
 
@@ -16,8 +16,12 @@ export default function AdCard({ ad, viewMode = 'grid' }: AdCardProps) {
   const adId = Number(ad.id);
   const liked = isFavorite(adId);
 
+  // Format date to English manually if needed, or rely on locale
+  const dateObj = new Date(ad.created_at);
+  const dateDisplay = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
   const priceDisplay = formatPrice(ad.price, ad.currency);
-  const location = `${ad.city || ''} / ${ad.district || ''}`;
+  const location = `${ad.city || ''}, ${ad.district || ''}`;
   const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=No+Image';
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
@@ -33,7 +37,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: AdCardProps) {
         <div className="flex flex-col sm:flex-row gap-4 p-3">
           <div className="relative w-full sm:w-48 aspect-[4/3] rounded-lg overflow-hidden shrink-0">
             <Image src={imageUrl} alt={ad.title} fill className="object-cover group-hover:scale-105 transition-transform duration-500" />
-            {ad.is_vitrin && <span className="absolute top-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">VİTRİN</span>}
+            {ad.is_vitrin && <span className="absolute top-2 left-2 bg-yellow-400 text-black text-[10px] font-bold px-2 py-0.5 rounded shadow-sm">FEATURED</span>}
           </div>
           <div className="flex-1 py-1 pr-2 flex flex-col justify-between">
             <div>
@@ -50,7 +54,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: AdCardProps) {
             </div>
             <div className="flex justify-between items-end mt-4">
               <span className="text-lg font-bold text-indigo-700">{priceDisplay}</span>
-              <span className="text-xs text-gray-400">{formatDate(ad.created_at)}</span>
+              <span className="text-xs text-gray-400">{dateDisplay}</span>
             </div>
           </div>
         </div>
@@ -73,15 +77,14 @@ export default function AdCard({ ad, viewMode = 'grid' }: AdCardProps) {
           />
 
           <div className="absolute top-3 left-3 flex flex-col gap-1.5 z-10">
-            {ad.is_urgent && <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-lg border border-rose-400/50 flex items-center gap-1"><Zap size={10} fill="currentColor"/> ACİL</span>}
-            {ad.is_vitrin && <span className="bg-yellow-400 text-black text-[10px] font-bold px-2.5 py-1 rounded-md shadow-lg border border-yellow-300/50">VİTRİN</span>}
+            {ad.is_urgent && <span className="bg-rose-500 text-white text-[10px] font-bold px-2.5 py-1 rounded-md shadow-lg border border-rose-400/50 flex items-center gap-1"><Zap size={10} fill="currentColor"/> URGENT</span>}
+            {ad.is_vitrin && <span className="bg-yellow-400 text-black text-[10px] font-bold px-2.5 py-1 rounded-md shadow-lg border border-yellow-300/50">FEATURED</span>}
           </div>
 
-          {/* FAVORİ BUTONU - YILDIZ */}
           <button
             onClick={handleFavoriteClick}
             className="absolute top-3 right-3 z-20 bg-white/90 backdrop-blur-sm text-gray-500 p-2 rounded-full shadow-md hover:scale-110 hover:text-yellow-500 transition-all duration-300 active:scale-95"
-            title={liked ? "Favorilerden Kaldır" : "Favoriye Ekle"}
+            title={liked ? "Remove from Favorites" : "Add to Favorites"}
           >
             <Star size={18} className={liked ? "fill-yellow-400 text-yellow-400" : ""} />
           </button>
@@ -100,7 +103,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: AdCardProps) {
               <span className="text-[11px] text-gray-500 truncate max-w-[60%] flex items-center gap-1">
                 <MapPin size={10} className="shrink-0"/> {ad.district}
               </span>
-              <span className="text-[10px] text-gray-400 font-medium">{formatDate(ad.created_at)}</span>
+              <span className="text-[10px] text-gray-400 font-medium">{dateDisplay}</span>
             </div>
           </div>
         </div>

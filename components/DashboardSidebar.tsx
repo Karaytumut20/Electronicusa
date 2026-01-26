@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, List, Star, MessageSquare, Settings, LogOut, Store, Wallet } from 'lucide-react'; // Heart -> Star
+import { Home, List, Star, MessageSquare, Settings, LogOut, Store, Wallet, Search } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
 export default function DashboardSidebar() {
@@ -10,13 +10,14 @@ export default function DashboardSidebar() {
   const pathname = usePathname();
 
   const menuItems = [
-    { href: '/bana-ozel', label: 'Özet Durum', icon: Home },
-    { href: '/bana-ozel/ilanlarim', label: 'İlanlarım', icon: List },
-    { href: '/bana-ozel/favoriler', label: 'Favorilerim', icon: Star }, // Değişti
-    { href: '/bana-ozel/mesajlarim', label: 'Mesajlar', icon: MessageSquare },
-    { href: '/bana-ozel/magazam', label: 'Mağaza Yönetimi', icon: Store },
-    { href: '/bana-ozel/cuzdan', label: 'Cüzdanım', icon: Wallet },
-    { href: '/bana-ozel/ayarlar', label: 'Ayarlar', icon: Settings },
+    { href: '/dashboard', label: 'Overview', icon: Home },
+    { href: '/dashboard/my-ads', label: 'My Listings', icon: List },
+    { href: '/dashboard/favorites', label: 'My Favorites', icon: Star },
+    { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
+    { href: '/dashboard/my-store', label: 'My Store', icon: Store },
+    { href: '/dashboard/wallet', label: 'My Wallet', icon: Wallet },
+    { href: '/dashboard/saved-searches', label: 'Saved Searches', icon: Search },
+    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
   ];
 
   return (
@@ -27,8 +28,8 @@ export default function DashboardSidebar() {
             {user?.name?.charAt(0) || 'U'}
           </div>
           <div className="overflow-hidden">
-            <h3 className="font-bold text-slate-800 truncate">{user?.name || 'Kullanıcı'}</h3>
-            <p className="text-xs text-slate-500 font-medium capitalize">{user?.role === 'store' ? 'Kurumsal Mağaza' : 'Bireysel Üye'}</p>
+            <h3 className="font-bold text-slate-800 truncate">{user?.name || 'User'}</h3>
+            <p className="text-xs text-slate-500 font-medium capitalize">{user?.role === 'store' ? 'Store Account' : 'Individual Account'}</p>
           </div>
         </div>
       </div>
@@ -59,7 +60,7 @@ export default function DashboardSidebar() {
               onClick={() => logout()}
               className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors text-left"
             >
-              <LogOut size={18} /> Çıkış Yap
+              <LogOut size={18} /> Logout
             </button>
           </li>
         </ul>

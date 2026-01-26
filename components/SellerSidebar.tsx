@@ -29,13 +29,13 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
 
   const handleSendMessage = async () => {
     if (!user) {
-        addToast('Mesaj göndermek için giriş yapmalısınız.', 'info');
+        addToast('Please login to send a message.', 'info');
         router.push('/login');
         return;
     }
 
     if (user.id === sellerId) {
-        addToast('Kendi ilanınıza mesaj gönderemezsiniz.', 'warning');
+        addToast('You cannot message yourself.', 'warning');
         return;
     }
 
@@ -45,12 +45,12 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
 
         if(error) {
             console.error(error);
-            addToast('Sohbet başlatılamadı. Lütfen tekrar deneyin.', 'error');
+            addToast('Could not start chat. Please try again.', 'error');
         } else if (data) {
             router.push(`/bana-ozel/mesajlarim?convId=${data.id}`);
         }
     } catch (err) {
-        addToast('Beklenmedik bir hata oluştu.', 'error');
+        addToast('Unexpected error occurred.', 'error');
     } finally {
         setIsMsgLoading(false);
     }
@@ -66,7 +66,7 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
         <div>
            <h3 className="font-bold text-slate-900 text-lg">{sellerName}</h3>
            <Link href={`/satici/${sellerId}`} className="text-xs text-indigo-600 font-medium hover:underline flex items-center gap-1">
-             Satıcının Tüm İlanları
+             View All Ads
            </Link>
         </div>
       </div>
@@ -86,15 +86,15 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
         <div className="rounded-lg overflow-hidden border border-slate-200">
             {!showPhone ? (
                 <div className="bg-gray-50 py-3.5 text-center text-gray-500 font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed">
-                    <EyeOff size={16} /> Numara Gizli
+                    <EyeOff size={16} /> Number Hidden
                 </div>
             ) : !isPhoneRevealed ? (
                 <button onClick={() => setIsPhoneRevealed(true)} className="w-full bg-slate-100 hover:bg-slate-200 py-3.5 flex items-center justify-center gap-2 text-slate-700 font-bold transition-colors">
-                    <Phone size={18} /> Telefonu Göster
+                    <Phone size={18} /> Show Number
                 </button>
             ) : (
                 <div className="bg-green-50 py-3.5 text-center text-green-700 font-bold text-lg select-all border-green-100">
-                    {sellerPhone || "Belirtilmemiş"}
+                    {sellerPhone || "Not Provided"}
                 </div>
             )}
         </div>
@@ -105,12 +105,12 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
             className="w-full bg-indigo-600 text-white hover:bg-indigo-700 py-3.5 rounded-lg font-bold flex items-center justify-center gap-2 transition-all shadow-md shadow-indigo-100 disabled:opacity-70"
         >
             {isMsgLoading ? <Loader2 size={18} className="animate-spin" /> : <MessageCircle size={18} />}
-            Mesaj Gönder
+            Send Message
         </button>
       </div>
 
       <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
-         <ShieldCheck size={14} className="text-green-500"/> Hesap Onaylı
+         <ShieldCheck size={14} className="text-green-500"/> Verified Account
       </div>
     </div>
   );

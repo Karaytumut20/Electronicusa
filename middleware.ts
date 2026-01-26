@@ -3,9 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({
-    request: {
-      headers: request.headers,
-    },
+    request: { headers: request.headers },
   })
 
   const supabase = createServerClient(
@@ -13,16 +11,10 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
+        getAll() { return request.cookies.getAll() },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value, options))
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
+          response = NextResponse.next({ request: { headers: request.headers } })
           cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options))
         },
       },
@@ -30,56 +22,34 @@ export async function middleware(request: NextRequest) {
   )
 
   let user = null;
-
   try {
-    // Bağlantı hatası olursa (Supabase Paused vb.) çökmemesi için try-catch
     const { data } = await supabase.auth.getUser();
     user = data.user;
   } catch (error) {
-    console.error("Middleware Auth Error (Supabase Bağlantı Hatası):", error);
-    // Hata durumunda kullanıcı yokmuş gibi davran, site çökmesin
     user = null;
   }
 
   const path = request.nextUrl.pathname;
 
-  // 1. KULLANICI KORUMASI
-  if (path.startsWith('/bana-ozel') || path.startsWith('/ilan-ver')) {
+  // 1. Protected Routes (Dashboard & Post Ad - UPDATED)
+  // Replaces '/bana-ozel' and '/ilan-ver' checks
+  if (path.startsWith('/dashboard') || path.startsWith('/post-ad')) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  // 2. ADMIN KORUMASI
+  // 2. Admin Protection
   if (path.startsWith('/admin') && path !== '/admin/login') {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
-
-    // Rol kontrolü (Hata durumunda güvenli geçiş)
-    try {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-
-        if (profile?.role !== 'admin') {
-          return NextResponse.redirect(new URL('/', request.url))
-        }
-    } catch {
-        // Profil çekilemezse (DB hatası) anasayfaya at
-        return NextResponse.redirect(new URL('/', request.url))
-    }
   }
 
-  // 3. LOGIN OLMUŞ KULLANICIYI LOGIN SAYFASINDAN UZAKLAŞTIR
+  // 3. Guest Only Routes
   if (user) {
       if (path === '/login' || path === '/register') {
-          return NextResponse.redirect(new URL('/bana-ozel', request.url));
-      }
-      if (path === '/admin/login') {
-          return NextResponse.redirect(new URL('/admin', request.url));
+          return NextResponse.redirect(new URL('/dashboard', request.url));
       }
   }
 

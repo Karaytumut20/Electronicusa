@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { ChevronRight, ArrowLeft, Monitor, Smartphone, Camera, Tv, Gamepad2, Plug, CheckCircle2, Laptop } from 'lucide-react';
 import { categoryTree, computerBrands, phoneBrands } from '@/lib/hierarchyData';
 
-const iconMap = {
+const iconMap: any = {
   Monitor: <Monitor size={28} />,
   Smartphone: <Smartphone size={28} />,
   Camera: <Camera size={28} />,
@@ -16,18 +16,18 @@ const iconMap = {
 
 export default function CategoryWizard() {
   const router = useRouter();
-  const [history, setHistory] = useState([]);
-  const [currentList, setCurrentList] = useState(categoryTree);
-  const [selectedPath, setSelectedPath] = useState([]);
+  const [history, setHistory] = useState<any[]>([]);
+  const [currentList, setCurrentList] = useState<any[]>(categoryTree);
+  const [selectedPath, setSelectedPath] = useState<string[]>([]);
   const [isBrandSelection, setIsBrandSelection] = useState(false);
 
-  const handleSelect = (item) => {
+  const handleSelect = (item: any) => {
     if (item.isDynamic) {
         setIsBrandSelection(true);
         setHistory([...history, currentList]);
         setSelectedPath([...selectedPath, item.title]);
 
-        let brands = [];
+        let brands: string[] = [];
         if (item.dynamicType === 'computer') brands = computerBrands;
         if (item.dynamicType === 'phone') brands = phoneBrands;
 
@@ -44,7 +44,8 @@ export default function CategoryWizard() {
     if (isBrandSelection) {
         const brand = item.title;
         const finalPath = [...selectedPath, brand].join(' > ');
-        router.push(`/ilan-ver/detay?cat=${selectedPath[0]?.toLowerCase().includes('computing') ? 'laptops' : 'smartphones'}&path=${encodeURIComponent(finalPath)}&brand=${encodeURIComponent(brand)}`);
+        // UPDATED REDIRECT: /ilan-ver/detay -> /post-ad/details
+        router.push(`/post-ad/details?cat=${selectedPath[0]?.toLowerCase().includes('computing') ? 'laptops' : 'smartphones'}&path=${encodeURIComponent(finalPath)}&brand=${encodeURIComponent(brand)}`);
         return;
     }
 
@@ -55,7 +56,8 @@ export default function CategoryWizard() {
       setCurrentList(item.subs);
       setSelectedPath(newPath);
     } else {
-      router.push(`/ilan-ver/detay?cat=${item.slug}&path=${newPath.join(' > ')}`);
+      // UPDATED REDIRECT: /ilan-ver/detay -> /post-ad/details
+      router.push(`/post-ad/details?cat=${item.slug}&path=${newPath.join(' > ')}`);
     }
   };
 

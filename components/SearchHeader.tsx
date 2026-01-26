@@ -1,4 +1,3 @@
-
 "use client";
 import React from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -19,7 +18,7 @@ export default function SearchHeader({ total, query, currentSort, currentView }:
     <div className="flex flex-col sm:flex-row justify-between items-center mb-3 border-b border-gray-200 pb-2 gap-3">
       <div className="flex items-center">
         <h1 className="text-[#333] font-bold text-sm">
-          {query ? `"${query}" aramanız için` : 'Arama sonuçları:'} <span className="text-blue-900">{total}</span> ilan bulundu
+          {query ? `Results for "${query}":` : 'All Listings:'} <span className="text-blue-900">{total}</span> found
         </h1>
         <SaveSearchButton />
       </div>
@@ -29,7 +28,7 @@ export default function SearchHeader({ total, query, currentSort, currentView }:
           <button
             onClick={() => updateParam('view', 'list')}
             className={`p-1.5 ${currentView !== 'map' ? 'bg-gray-200 text-black' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-            title="Liste Görünümü"
+            title="List View"
           >
             <List size={16} />
           </button>
@@ -37,7 +36,7 @@ export default function SearchHeader({ total, query, currentSort, currentView }:
           <button
             onClick={() => updateParam('view', 'map')}
             className={`p-1.5 ${currentView === 'map' ? 'bg-gray-200 text-black' : 'bg-white text-gray-500 hover:bg-gray-50'}`}
-            title="Harita Görünümü"
+            title="Map View"
           >
             <MapIcon size={16} />
           </button>
@@ -48,11 +47,11 @@ export default function SearchHeader({ total, query, currentSort, currentView }:
           onChange={(e) => updateParam('sort', e.target.value)}
           className="border border-gray-300 rounded-sm text-[12px] p-1.5 text-gray-600 outline-none focus:border-blue-500"
         >
-          <option value="">Gelişmiş sıralama</option>
-          <option value="price_asc">Fiyata göre (En düşük)</option>
-          <option value="price_desc">Fiyata göre (En yüksek)</option>
-          <option value="date_desc">Tarihe göre (En yeni)</option>
-          <option value="date_asc">Tarihe göre (En eski)</option>
+          <option value="">Sort By</option>
+          <option value="price_asc">Price (Low to High)</option>
+          <option value="price_desc">Price (High to Low)</option>
+          <option value="date_desc">Date (Newest)</option>
+          <option value="date_asc">Date (Oldest)</option>
         </select>
       </div>
     </div>

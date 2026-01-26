@@ -8,19 +8,19 @@ import { processors, ramOptions, screenSizes, gpuCapacities, ssdCapacities } fro
 export default function FilterSidebar() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [filters, setFilters] = useState({});
-  const [expanded, setExpanded] = useState({
-      brand: true, specs: true, price: true
+  const [filters, setFilters] = useState<any>({});
+  const [expanded, setExpanded] = useState<any>({
+      brand: true, specs: true, price: true, screen: true
   });
 
   useEffect(() => {
-    const newFilters = {};
+    const newFilters: any = {};
     searchParams.forEach((value, key) => { newFilters[key] = value; });
     setFilters(newFilters);
   }, [searchParams]);
 
-  const updateFilter = (key, value) => {
-      setFilters((prev) => {
+  const updateFilter = (key: string, value: string) => {
+      setFilters((prev: any) => {
           const next = { ...prev, [key]: value };
           if (!value) delete next[key];
           return next;
@@ -30,7 +30,7 @@ export default function FilterSidebar() {
   const applyFilters = () => {
     const params = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.set(key, value);
+        if (value) params.set(key, value as string);
     });
     params.set('showResults', 'true');
     router.push(`/search?${params.toString()}`);
@@ -40,18 +40,18 @@ export default function FilterSidebar() {
     router.push('/search');
   };
 
-  const toggle = (id) => setExpanded(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggle = (id: string) => setExpanded((prev: any) => ({ ...prev, [id]: !prev[id] }));
 
   // Brands logic
   const cat = filters.category || '';
   let activeBrands = computerBrands;
   if (cat.includes('phone') || cat.includes('mobile')) activeBrands = phoneBrands;
 
-  const FilterSection = ({ id, title, icon: Icon, children }) => (
+  const FilterSection = ({ id, title, icon: Icon, children }: any) => (
       <div className="border-b border-gray-100 py-4 last:border-0">
           <button onClick={() => toggle(id)} className="flex items-center justify-between w-full text-left mb-2 group">
-              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2 group-hover:text-blue-600 transition-colors">
-                  {Icon && <Icon size={14} className="text-slate-400 group-hover:text-blue-500"/>} {title}
+              <span className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-2 group-hover:text-indigo-600 transition-colors">
+                  {Icon && <Icon size={14} className="text-slate-400 group-hover:text-indigo-500"/>} {title}
               </span>
               {expanded[id] ? <ChevronUp size={14} className="text-gray-400"/> : <ChevronDown size={14} className="text-gray-400"/>}
           </button>
@@ -93,32 +93,39 @@ export default function FilterSidebar() {
           <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1 block">PROCESSOR</label>
               <select value={filters.processor || ''} onChange={(e) => updateFilter('processor', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Select</option>
+                  <option value="">Select Processor</option>
                   {processors.map(p => <option key={p} value={p}>{p}</option>)}
               </select>
           </div>
           <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1 block">RAM</label>
               <select value={filters.ram || ''} onChange={(e) => updateFilter('ram', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Select</option>
+                  <option value="">Select RAM</option>
                   {ramOptions.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
           </div>
           <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1 block">STORAGE (SSD)</label>
               <select value={filters.ssd_capacity || ''} onChange={(e) => updateFilter('ssd_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Select</option>
+                  <option value="">Select Storage</option>
                   {ssdCapacities.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
           </div>
       </FilterSection>
 
-      <FilterSection id="screen" title="Screen" icon={Monitor}>
+      <FilterSection id="screen" title="Screen & Graphics" icon={Monitor}>
           <div>
               <label className="text-[10px] font-bold text-slate-500 mb-1 block">SCREEN SIZE</label>
               <select value={filters.screen_size || ''} onChange={(e) => updateFilter('screen_size', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
-                  <option value="">Select</option>
+                  <option value="">Select Screen</option>
                   {screenSizes.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
+          </div>
+          <div className="mt-3">
+              <label className="text-[10px] font-bold text-slate-500 mb-1 block">GPU MEMORY</label>
+              <select value={filters.gpu_capacity || ''} onChange={(e) => updateFilter('gpu_capacity', e.target.value)} className="w-full border border-gray-300 rounded-lg text-xs h-9 px-2 focus:border-indigo-500 outline-none bg-white">
+                  <option value="">Select GPU</option>
+                  {gpuCapacities.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
           </div>
       </FilterSection>
