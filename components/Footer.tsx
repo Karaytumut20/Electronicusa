@@ -3,39 +3,42 @@ import Link from 'next/link';
 
 export default function Footer() {
   return (
-    <footer className="mt-10 border-t border-gray-200 bg-white text-xs text-gray-600">
-      <div className="container mx-auto px-4 max-w-[1150px] py-8">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+    <footer className="mt-12 border-t border-slate-200 bg-white text-xs text-slate-500">
+      <div className="container mx-auto px-6 max-w-7xl py-12">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-10">
           <div>
-            <h4 className="font-bold text-[#333] mb-3 text-sm">Corporate</h4>
-            <ul className="space-y-2">
-              <li><Link href="#" className="hover:underline">About Us</Link></li>
-              <li><Link href="#" className="hover:underline">Careers</Link></li>
-              <li><Link href="#" className="hover:underline">Contact</Link></li>
+            <h4 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-widest">ElectronicUSA</h4>
+            <ul className="space-y-3">
+              <li><Link href="#" className="hover:text-indigo-600">About Us</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Contact</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Careers</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-[#333] mb-3 text-sm">Services</h4>
-            <ul className="space-y-2">
-              <li><Link href="#" className="hover:underline">Secure Payment</Link></li>
-              <li><Link href="#" className="hover:underline">Advertise</Link></li>
+            <h4 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-widest">Services</h4>
+            <ul className="space-y-3">
+              <li><Link href="#" className="hover:text-indigo-600">Post Ad</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Store Solutions</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Secure Payment</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-[#333] mb-3 text-sm">Privacy</h4>
-            <ul className="space-y-2">
-              <li><Link href="#" className="hover:underline">Terms of Use</Link></li>
-              <li><Link href="#" className="hover:underline">Privacy Policy</Link></li>
+            <h4 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-widest">Legal</h4>
+            <ul className="space-y-3">
+              <li><Link href="#" className="hover:text-indigo-600">Terms of Use</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Privacy Policy</Link></li>
+              <li><Link href="#" className="hover:text-indigo-600">Cookie Settings</Link></li>
             </ul>
           </div>
           <div>
-            <h4 className="font-bold text-[#333] mb-3 text-sm">Follow Us</h4>
-            <p>Support: <span className="font-bold text-[#333]">support@electronicusa.com</span></p>
+            <h4 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-widest">Support</h4>
+            <p>Help Center available 24/7 at:</p>
+            <span className="font-black text-indigo-600 text-sm">support@electronicusa.com</span>
           </div>
         </div>
       </div>
-      <div className="border-t border-gray-200 bg-[#f6f7f9] py-6 text-center">
-        <p>Copyright © 2026 ElectronicUSA. All rights reserved.</p>
+      <div className="border-t border-slate-100 bg-slate-50 py-6 text-center font-medium">
+        <p>© 2026 ElectronicUSA. All rights reserved.</p>
       </div>
     </footer>
   );
