@@ -47,7 +47,7 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
             console.error(error);
             addToast('Could not start chat. Please try again.', 'error');
         } else if (data) {
-            router.push(`/bana-ozel/mesajlarim?convId=${data.id}`);
+            router.push(`/dashboard/messages?convId=${data.id}`);
         }
     } catch (err) {
         addToast('Unexpected error occurred.', 'error');
@@ -58,7 +58,6 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
 
   return (
     <div className="bg-white rounded-xl shadow-card border border-gray-100 p-6">
-      {/* Profil Başlığı */}
       <div className="flex items-center gap-4 mb-6">
         <div className="w-14 h-14 bg-indigo-50 rounded-full flex items-center justify-center border-2 border-white shadow-sm text-indigo-600">
            <User size={28} />
@@ -66,12 +65,11 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
         <div>
            <h3 className="font-bold text-slate-900 text-lg">{sellerName}</h3>
            <Link href={`/satici/${sellerId}`} className="text-xs text-indigo-600 font-medium hover:underline flex items-center gap-1">
-             View All Ads
+             View All Listings
            </Link>
         </div>
       </div>
 
-      {/* Puan */}
       <div className="mb-6 bg-slate-50 p-3 rounded-lg flex justify-between items-center">
          <div className="flex text-yellow-400 gap-0.5">
             {[...Array(5)].map((_,i) => <Star key={i} size={16} fill={i < Math.round(ratingData.avg) ? "currentColor" : "none"} />)}
@@ -79,10 +77,7 @@ export default function SellerSidebar({ sellerId, sellerName, sellerPhone, adId,
          <span className="text-sm font-bold text-slate-700">{ratingData.avg.toFixed(1)} <span className="text-slate-400 font-normal">({ratingData.count})</span></span>
       </div>
 
-      {/* Aksiyonlar */}
       <div className="space-y-3">
-
-        {/* Telefon Göster / Gizli */}
         <div className="rounded-lg overflow-hidden border border-slate-200">
             {!showPhone ? (
                 <div className="bg-gray-50 py-3.5 text-center text-gray-500 font-medium text-sm flex items-center justify-center gap-2 cursor-not-allowed">

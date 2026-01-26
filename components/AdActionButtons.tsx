@@ -5,68 +5,47 @@ import { useModal } from '@/context/ModalContext';
 import { useMessage } from '@/context/MessageContext';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from '@/context/ToastContext';
-import { useFavorites } from '@/context/FavoritesContext'; // YENİ
+import { useFavorites } from '@/context/FavoritesContext';
 
 export default function AdActionButtons({ id, title, image, sellerName }: { id: number, title: string, image?: string, sellerName?: string }) {
   const { openModal } = useModal();
   const { startConversation } = useMessage();
   const { user } = useAuth();
   const { addToast } = useToast();
-  const { isFavorite, toggleFavorite } = useFavorites(); // YENİ
+  const { isFavorite, toggleFavorite } = useFavorites();
 
   const liked = isFavorite(id);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = () => window.print();
 
   const handleSendMessage = () => {
     if (!user) {
-      addToast('Mesaj göndermek için giriş yapmalısınız.', 'error');
+      addToast('Please login to send a message.', 'error');
       return;
     }
-    const adImage = image || 'https://picsum.photos/300/200';
-    const sName = sellerName || 'Satıcı';
+    const adImage = image || 'https://via.placeholder.com/300';
+    const sName = sellerName || 'Seller';
     startConversation(id, title, adImage, sName);
   };
 
   return (
     <div className="mt-2 space-y-2">
       <div className="flex gap-4 text-[11px] text-blue-800">
-         <button
-          onClick={handleSendMessage}
-          className="flex items-center gap-1 hover:underline font-bold text-blue-900 md:hidden"
-        >
-          <MessageSquare size={14}/> Mesaj Gönder
-        </button>
-
-        {/* YENİ: FAVORİ BUTONU */}
-        <button
-          onClick={() => toggleFavorite(id)}
-          className={`flex items-center gap-1 hover:underline ${liked ? 'text-yellow-600 font-bold' : ''}`}
-          title="Favorilere Ekle/Çıkar"
-        >
+         <button onClick={handleSendMessage} className="flex items-center gap-1 hover:underline font-bold text-blue-900 md:hidden">
+            <MessageSquare size={14}/> Message
+         </button>
+        <button onClick={() => toggleFavorite(id)} className={`flex items-center gap-1 hover:underline ${liked ? 'text-yellow-600 font-bold' : ''}`}>
           <Star size={14} className={liked ? "fill-yellow-500 text-yellow-500" : ""} />
-          {liked ? 'Favorilerde' : 'Favoriye Ekle'}
+          {liked ? 'Saved' : 'Add to Favorites'}
         </button>
-
-        <button
-          onClick={() => openModal('REPORT', { id })}
-          className="flex items-center gap-1 hover:underline"
-        >
-          <Flag size={14}/> Şikayet Et
+        <button onClick={() => openModal('REPORT', { id })} className="flex items-center gap-1 hover:underline">
+          <Flag size={14}/> Report
         </button>
-        <button
-          onClick={handlePrint}
-          className="flex items-center gap-1 hover:underline"
-        >
-          <Printer size={14}/> Yazdır
+        <button onClick={handlePrint} className="flex items-center gap-1 hover:underline">
+          <Printer size={14}/> Print
         </button>
-        <button
-          onClick={() => openModal('SHARE', { title, url: window.location.href })}
-          className="flex items-center gap-1 hover:underline"
-        >
-          <Share2 size={14}/> Paylaş
+        <button onClick={() => openModal('SHARE', { title, url: window.location.href })} className="flex items-center gap-1 hover:underline">
+          <Share2 size={14}/> Share
         </button>
       </div>
     </div>

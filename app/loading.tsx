@@ -5,8 +5,10 @@ export default function Loading() {
   return (
     <div className="flex items-center justify-center min-h-[60vh] w-full">
       <div className="flex flex-col items-center gap-3">
-        <Loader2 size={48} className="text-[#ffe800] animate-spin" />
-        <span className="text-[#2d405a] font-bold text-lg animate-pulse">Yükleniyor...</span>
+        <Loader2 size={48} className="text-indigo-600 animate-spin" />
+        <span className="text-slate-700 font-bold text-lg animate-pulse">
+          Loading...
+        </span>
       </div>
     </div>
   );

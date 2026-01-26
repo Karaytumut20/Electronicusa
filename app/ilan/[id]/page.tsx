@@ -26,15 +26,14 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
   const sellerInfo = ad.profiles || { full_name: 'Unknown User', phone: '', email: '', show_phone: false };
   const adImages = ad.images && ad.images.length > 0 ? ad.images : (ad.image ? [ad.image] : []);
 
-  // Breadcrumb Construction
   const breadcrumbItems = [
       { label: 'Home', href: '/' },
       { label: 'Search', href: '/search' },
-      { label: 'Ad Details' }
+      { label: 'Details' }
   ];
 
   const tabItems = [
-     { id: 'desc', label: 'Description', content: <div className="text-slate-700 leading-relaxed whitespace-pre-wrap text-base p-2 font-medium">{ad.description}</div> },
+     { id: 'desc', label: 'Description', content: <div className="text-slate-700 leading-relaxed whitespace-pre-wrap text-base p-4">{ad.description}</div> },
      { id: 'features', label: 'Features', content: <FeaturesTab ad={ad} /> },
      { id: 'location', label: 'Location', content: <LocationTab city={ad.city} district={ad.district} /> }
   ];
@@ -68,7 +67,6 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
           <div className="lg:col-span-8 space-y-8">
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-1">
                <Gallery mainImage={ad.image} images={adImages} />
@@ -83,7 +81,6 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
                  <AdActionButtons id={ad.id} title={ad.title} image={ad.image} sellerName={sellerInfo.full_name} />
                </div>
             </div>
-
             <Tabs items={tabItems} />
           </div>
 
@@ -101,24 +98,22 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
              />
 
              <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider border-b border-gray-50 pb-2">Overview</h3>
+                <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider border-b border-gray-50 pb-2">Details</h3>
                 <ul className="space-y-3 text-sm">
                    <li className="flex justify-between border-b border-gray-50 pb-2">
-                        <span className="text-slate-500 flex items-center gap-2"><Calendar size={14}/> Listed Date</span>
-                        <span className="font-bold text-slate-900">{new Date(ad.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                        <span className="text-slate-500 flex items-center gap-2"><Calendar size={14}/> Posted Date</span>
+                        <span className="font-bold text-slate-900">{new Date(ad.created_at).toLocaleDateString()}</span>
                    </li>
                    {ad.brand && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Brand</span><span className="font-medium text-slate-900">{ad.brand}</span></li>}
                    {ad.model && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Model</span><span className="font-medium text-slate-900">{ad.model}</span></li>}
-                   {ad.processor && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Processor</span><span className="font-medium text-slate-900">{ad.processor}</span></li>}
-                   {ad.ram && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">RAM</span><span className="font-medium text-slate-900">{ad.ram}</span></li>}
+                   {ad.year && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Year</span><span className="font-medium text-slate-900">{ad.year}</span></li>}
                    <li className="flex justify-between pt-1">
-                      <span className="text-slate-500 flex items-center gap-2"><Eye size={14}/> Total Views</span>
+                      <span className="text-slate-500 flex items-center gap-2"><Eye size={14}/> Views</span>
                       <span className="font-bold text-slate-900">{ad.view_count || 0}</span>
                    </li>
                 </ul>
              </div>
           </div>
-
         </div>
       </div>
       <MobileAdActionBar price={`${formattedPrice} ${ad.currency}`} phone={sellerInfo.show_phone ? sellerInfo.phone : undefined} />
