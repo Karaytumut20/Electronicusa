@@ -11,216 +11,166 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 REMOVING MAINTENANCE MODE FEATURE (FIXED)...\n" +
+    "\n🚀 CONNECTING HEADER TO DATABASE SETTINGS...\n" +
     colors.reset,
 );
 
 const filesToUpdate = [
-  // 1. Admin Actions: Bakım modu parametresi kaldırıldı
+  // 1. HEADER: Artık site ismini veritabanından (prop olarak) alıyor
   {
-    path: "lib/adminActions.ts",
-    content: `'use server'
-import { createClient } from '@/lib/supabase/server';
-import { revalidatePath } from 'next/cache';
+    path: "components/Header.tsx",
+    content: `"use client";
+import React, { useState } from 'react';
+import Link from 'next/link';
+import { useRouter, usePathname } from 'next/navigation';
+import { Search, Plus, User, X, Home, List, MessageSquare, Settings, LogOut, Star } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
+import MobileMenu from './MobileMenu';
 
-// --- EXISTING FUNCTIONS (Kept as is) ---
+// Site ismi artık yukarıdan (Layout'tan) geliyor
+export default function Header({ siteName = 'ElectronicUSA' }: { siteName?: string }) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const router = useRouter();
+  const pathname = usePathname();
+  const { user, logout } = useAuth();
 
-export async function getAdminStats() {
-  const supabase = await createClient();
-  const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
-  const { count: ads } = await supabase.from('ads').select('*', { count: 'exact', head: true });
-  const { count: active } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'yayinda');
-  return { users: users || 0, ads: ads || 0, active: active || 0, revenue: 0 };
-}
+  const hideSearch = pathname === '/login' || pathname === '/register' || pathname.startsWith('/admin');
 
-export async function getAdminAds() {
-  const supabase = await createClient();
-  const { data } = await supabase.from('ads').select('*, profiles(full_name, email)').order('created_at', { ascending: false });
-  return data || [];
-}
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchTerm.trim()) router.push(\`/search?q=\${encodeURIComponent(searchTerm)}\`);
+  };
 
-export async function approveAdAdmin(id: number) {
-  const supabase = await createClient();
-  const { error } = await supabase.from('ads').update({ status: 'yayinda' }).eq('id', id);
-  if (error) return { success: false, error: error.message };
-  revalidatePath('/admin/listings');
-  return { success: true };
-}
+  const closeMenu = () => setIsMenuOpen(false);
 
-export async function rejectAdAdmin(id: number) {
-  const supabase = await createClient();
-  const { error } = await supabase.from('ads').update({ status: 'reddedildi' }).eq('id', id);
-  if (error) return { success: false, error: error.message };
-  revalidatePath('/admin/listings');
-  return { success: true };
-}
+  // LOGO HARFİ: Veritabanından gelen ismin baş harfi
+  const logoLetter = siteName ? siteName.charAt(0).toUpperCase() : 'E';
 
-export async function deleteAdAdmin(id: number) {
-  const supabase = await createClient();
-  const { data: ad } = await supabase.from('ads').select('images, image').eq('id', id).single();
-  const { error } = await supabase.from('ads').delete().eq('id', id);
+  // Marka ismini renklendirme (Son 3 harfi renkli yapalım, estetik olsun)
+  const renderBrandName = () => {
+     if (!siteName) return null;
+     if (siteName.length <= 3) return <span className="text-slate-800">{siteName}</span>;
 
-  if (error) return { success: false, error: error.message };
+     const mainPart = siteName.slice(0, -3);
+     const coloredPart = siteName.slice(-3);
 
-  try {
-      const imagesToDelete = [];
-      if (ad?.image) imagesToDelete.push(ad.image);
-      if (ad?.images && Array.isArray(ad.images)) {
-          ad.images.forEach((img: string) => imagesToDelete.push(img));
-      }
-      const paths = imagesToDelete.map(url => {
-          const parts = url.split('/ads/');
-          return parts.length > 1 ? parts[1] : null;
-      }).filter(p => p !== null);
+     return (
+       <>
+         <span className="text-slate-800">{mainPart}</span>
+         <span className="text-indigo-600">{coloredPart}</span>
+       </>
+     );
+  };
 
-      if (paths.length > 0) {
-          await supabase.storage.from('ads').remove(paths);
-      }
-  } catch (storageErr) {
-      console.error("Storage cleanup warning:", storageErr);
-  }
+  return (
+    <>
+      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 h-[70px] md:h-[80px] flex items-center justify-center sticky top-0 z-50 transition-all shadow-sm">
+        <div className="container max-w-7xl flex items-center justify-between px-4 md:px-6 h-full gap-3 md:gap-4 relative">
 
-  revalidatePath('/admin/listings');
-  return { success: true };
-}
+          {/* LOGO & SITE NAME */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/" className="flex items-center gap-2 group">
+              {/* Dinamik Baş Harf */}
+              <div className="w-9 h-9 md:w-10 md:h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-lg shadow-indigo-200 transition-all duration-300">
+                {logoLetter}
+              </div>
+              {/* Veritabanından Gelen İsim */}
+              <span className="font-black text-lg md:text-2xl tracking-tighter hidden md:block">
+                {renderBrandName()}
+              </span>
+            </Link>
+          </div>
 
-export async function updateUserAdminAction(userId: string, data: any) {
-    const supabase = await createClient();
-    const { data: currentUser } = await supabase.auth.getUser();
-    const { data: currentProfile } = await supabase.from('profiles').select('role').eq('id', currentUser?.user?.id).single();
+          {/* SEARCH BAR */}
+          {!hideSearch && (
+            <div className="flex-1 max-w-[600px]">
+              <form onSubmit={handleSearch} className="relative group w-full">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Search..."
+                  className="w-full h-[40px] md:h-[46px] pl-10 md:pl-12 pr-4 bg-slate-100 border-none rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none placeholder:text-slate-400"
+                />
+                <Search size={18} className="absolute left-3.5 md:left-4 top-[11px] md:top-[14px] text-slate-400 group-focus-within:text-indigo-600" />
+              </form>
+            </div>
+          )}
 
-    if (currentProfile?.role !== 'admin') {
-        return { success: false, error: 'Unauthorized.' };
-    }
+          {/* ACTIONS & MENU */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link href="/post-ad" className="bg-indigo-600 text-white p-2 md:px-5 md:py-2.5 rounded-full md:rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
+              <Plus size={20}/> <span className="hidden md:inline">Post Ad</span>
+            </Link>
 
-    const { error } = await supabase.from('profiles').update({
-        full_name: data.full_name,
-        role: data.role,
-        status: data.status
-    }).eq('id', userId);
+            <div className="relative">
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    className="w-10 h-10 rounded-full bg-slate-100 border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden flex items-center justify-center text-slate-600 active:scale-95"
+                >
+                    {user?.avatar ? (
+                        <img src={user.avatar} className="w-full h-full object-cover" alt="User" />
+                    ) : (
+                        <User size={20} />
+                    )}
+                </button>
+                <MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
+            </div>
 
-    if (error) return { success: false, error: error.message };
-    revalidatePath('/admin/users');
-    return { success: true };
-}
-
-// --- SYSTEM SETTINGS (Updated: Removed Maintenance Mode) ---
-
-export async function getSystemSettings() {
-    const supabase = await createClient();
-    const { data } = await supabase.from('system_settings').select('site_name').eq('id', 1).single();
-    return data || { site_name: 'ElectronicUSA' };
-}
-
-export async function updateSystemSettings(formData: { site_name: string }) {
-    const supabase = await createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single();
-
-    if (profile?.role !== 'admin') {
-        return { success: false, error: 'You do not have permission.' };
-    }
-
-    // maintenance_mode alanı çıkarıldı
-    const { error } = await supabase.from('system_settings').upsert({
-        id: 1,
-        site_name: formData.site_name,
-        updated_at: new Date().toISOString()
-    });
-
-    if (error) return { success: false, error: error.message };
-
-    revalidatePath('/');
-    return { success: true };
+          </div>
+        </div>
+      </header>
+    </>
+  );
 }
 `,
   },
-  // 2. Admin Settings Page: Bakım modu UI'ı kaldırıldı
+  // 2. LAYOUT: Veritabanından ismi çekip Header'a gönderiyor
   {
-    path: "app/admin/settings/page.tsx",
-    content: `"use client";
-import React, { useEffect, useState } from 'react';
-import { Save, Loader2, Globe } from 'lucide-react';
-import { getSystemSettings, updateSystemSettings } from '@/lib/adminActions';
-import { useToast } from '@/context/ToastContext';
+    path: "app/layout.tsx",
+    content: `import React from 'react';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Providers } from "@/components/Providers";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import ModalRoot from "@/components/ModalRoot";
+import { getSystemSettings } from "@/lib/adminActions"; // Ayarları çekmek için
 
-export default function AdminSettingsPage() {
-  const { addToast } = useToast();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+const inter = Inter({ subsets: ["latin"] });
 
-  const [settings, setSettings] = useState({
-      site_name: ''
-  });
+export const metadata: Metadata = {
+  title: "Marketplace - Global İlan Platformu",
+  description: "Dünyanın en büyük ilan platformu.",
+};
 
-  useEffect(() => {
-    async function loadSettings() {
-        const data = await getSystemSettings();
-        if (data) {
-            setSettings({
-                site_name: data.site_name || 'ElectronicUSA'
-            });
-        }
-        setLoading(false);
-    }
-    loadSettings();
-  }, []);
-
-  const handleSave = async () => {
-    setSaving(true);
-    try {
-        const res = await updateSystemSettings(settings);
-        if (res.success) {
-            addToast('System settings saved successfully.', 'success');
-        } else {
-            addToast(res.error || 'Save failed.', 'error');
-        }
-    } catch (err) {
-        addToast('An unexpected error occurred.', 'error');
-    } finally {
-        setSaving(false);
-    }
-  };
-
-  if (loading) {
-      return <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-indigo-600" /></div>;
-  }
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  // Veritabanından Site İsmini Çek
+  const settings = await getSystemSettings();
+  const siteName = settings?.site_name || 'ElectronicUSA'; // Varsayılan değer
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-slate-800">System Settings</h1>
-      </div>
-
-      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-8">
-
-        {/* Site Name */}
-        <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
-                <Globe size={16} className="text-slate-400"/> Site Name
-            </label>
-            <p className="text-xs text-slate-500 mb-2">The name that appears in the browser title and logos.</p>
-            <input
-                value={settings.site_name}
-                onChange={(e) => setSettings({...settings, site_name: e.target.value})}
-                className="w-full border border-gray-300 p-2.5 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
-                placeholder="Ex: ElectronicUSA"
-            />
-        </div>
-
-        <div className="pt-4 border-t border-gray-100">
-            <button
-                onClick={handleSave}
-                disabled={saving}
-                className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 disabled:opacity-70 transition-all shadow-md shadow-indigo-100"
-            >
-                {saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>}
-                Save Changes
-            </button>
-        </div>
-      </div>
-    </div>
+    <html lang="en" className="light">
+      <body className={inter.className}>
+        <Providers>
+          <div className="flex flex-col min-h-screen">
+            {/* Site ismini Header'a prop olarak gönder */}
+            <Header siteName={siteName} />
+            <main className="flex-1">
+              {children}
+            </main>
+            <Footer />
+          </div>
+          <ModalRoot />
+        </Providers>
+      </body>
+    </html>
   );
 }
 `,
@@ -243,6 +193,6 @@ filesToUpdate.forEach((file) => {
 
 console.log(
   colors.green +
-    "\n✅ Maintenance Mode removed from Admin Settings and Actions." +
+    "\n✅ System integrated! Header text and logo letter now come from the Database." +
     colors.reset,
 );

@@ -2,10 +2,11 @@ import React from 'react';
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "@/components/Providers"; // Merkezi Provider (Senior Pattern)
+import { Providers } from "@/components/Providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ModalRoot from "@/components/ModalRoot";
+import { getSystemSettings } from "@/lib/adminActions"; // Ayarları çekmek için
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -14,24 +15,27 @@ export const metadata: Metadata = {
   description: "Dünyanın en büyük ilan platformu.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // Veritabanından Site İsmini Çek
+  const settings = await getSystemSettings();
+  const siteName = settings?.site_name || 'ElectronicUSA'; // Varsayılan değer
+
   return (
-    <html lang="tr" className="light">
+    <html lang="en" className="light">
       <body className={inter.className}>
-        {/* Tüm uygulama state'lerini kapsayan merkezi Provider */}
         <Providers>
           <div className="flex flex-col min-h-screen">
-            <Header />
+            {/* Site ismini Header'a prop olarak gönder */}
+            <Header siteName={siteName} />
             <main className="flex-1">
               {children}
             </main>
             <Footer />
           </div>
-          {/* ModalRoot da context'e erişebilmesi için provider içinde olmalı */}
           <ModalRoot />
         </Providers>
       </body>
