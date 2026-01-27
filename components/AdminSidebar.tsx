@@ -2,7 +2,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, Users, List, CreditCard, Settings, FileText, LogOut, ShieldAlert, Tag } from 'lucide-react';
+import { LayoutDashboard, Users, List, Settings, FileText, LogOut, Tag } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { useRouter } from 'next/navigation';
 
@@ -20,9 +20,9 @@ export default function AdminSidebar() {
     { label: 'Overview', href: '/admin', icon: LayoutDashboard },
     { label: 'Users', href: '/admin/users', icon: Users },
     { label: 'Listings', href: '/admin/listings', icon: List },
-    { label: 'Categories', href: '/admin/categories', icon: Tag }, // EKLENDİ
-    { label: 'Payments', href: '/admin/payments', icon: CreditCard },
-    { label: 'Moderation', href: '/admin/moderation', icon: ShieldAlert },
+    { label: 'Categories', href: '/admin/categories', icon: Tag },
+    // Payments removed
+    // Moderation removed
     { label: 'System Logs', href: '/admin/logs', icon: FileText },
     { label: 'Settings', href: '/admin/settings', icon: Settings },
   ];

@@ -18,9 +18,9 @@ async function checkRateLimit(userId: string) {
 export async function createAdAction(formData: Partial<AdFormData>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' }
+  if (!user) return { error: 'You must be logged in.' }
 
-  if (!(await checkRateLimit(user.id))) return { error: 'Günlük ilan limiti dolu.' };
+  if (!(await checkRateLimit(user.id))) return { error: 'Daily ad limit reached.' };
 
   const validation = adSchema.safeParse(formData);
   if (!validation.success) return { error: validation.error.issues[0].message };
@@ -36,13 +36,13 @@ export async function createAdAction(formData: Partial<AdFormData>) {
     status: 'onay_bekliyor',
     is_vitrin: false, is_urgent: false,
     moderation_score: analysis.score, moderation_tags: analysis.flags,
-    admin_note: analysis.autoReject ? `OTOMATİK RET: ${analysis.rejectReason}` : null
+    admin_note: analysis.autoReject ? `AUTO REJECT: ${analysis.rejectReason}` : null
   }]).select('id').single()
 
-  if (error) return { error: `Hata: ${error.message}` }
+  if (error) return { error: `Error: ${error.message}` }
 
   await logActivity(user.id, 'CREATE_AD', { adId: data.id, title: validation.data.title });
-  if (analysis.autoReject) return { error: `İlan reddedildi: ${analysis.rejectReason}` };
+  if (analysis.autoReject) return { error: `Ad rejected: ${analysis.rejectReason}` };
 
   revalidatePath('/');
   return { success: true, adId: data.id }
@@ -93,11 +93,9 @@ export async function getAdsServer(searchParams: any) {
   return { data: data || [], count: count || 0, totalPages: count ? Math.ceil(count / limit) : 0 };
 }
 
-// --- DİNAMİK KATEGORİ SİSTEMİ (DÜZELTİLDİ: STATIC CLIENT) ---
+// --- DİNAMİK KATEGORİ SİSTEMİ ---
 export const getCategoryTreeServer = unstable_cache(
   async () => {
-    // DÜZELTME: createClient() yerine createStaticClient() kullanılıyor.
-    // createStaticClient cookies() kullanmaz, bu yüzden cache içinde güvenlidir.
     const supabase = createStaticClient();
 
     const { data, error } = await supabase
@@ -121,17 +119,40 @@ export async function addCategoryAction(categoryData: { title: string, slug: str
     const supabase = await createClient();
     const { data, error } = await supabase.from('categories').insert([categoryData]).select().single();
     if (error) return { error: error.message };
+
+    revalidatePath('/admin/categories');
     revalidatePath('/');
     return { success: true, data };
 }
 
-// --- İLAN DETAY & İŞLEMLER ---
+// YENİ: Kategori Güncelleme
+export async function updateCategoryAction(id: number, categoryData: { title: string, slug: string, parent_id?: number }) {
+    const supabase = await createClient();
+    const { data, error } = await supabase.from('categories').update(categoryData).eq('id', id).select().single();
+    if (error) return { error: error.message };
+
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+    return { success: true, data };
+}
+
+// YENİ: Kategori Silme
+export async function deleteCategoryAction(id: number) {
+    const supabase = await createClient();
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (error) return { error: error.message };
+
+    revalidatePath('/admin/categories');
+    revalidatePath('/');
+    return { success: true };
+}
+
+// --- DİĞER AKSİYONLAR ---
 export async function getAdDetailServer(id: number) {
   const supabase = await createClient()
   const { data } = await supabase.from('ads').select('*, profiles(*), categories(title)').eq('id', id).single()
   return data
 }
-
 export async function updateAdAction(id: number, formData: any) {
     const supabase = await createClient();
     const { error } = await supabase.from('ads').update(formData).eq('id', id);
@@ -139,29 +160,24 @@ export async function updateAdAction(id: number, formData: any) {
     revalidatePath('/bana-ozel/ilanlarim');
     return { success: true };
 }
-
 export async function approveAdAction(id: number) {
     const supabase = await createClient();
     const { error } = await supabase.from('ads').update({ status: 'yayinda' }).eq('id', id);
     if (error) return { success: false, error: error.message };
     return { success: true };
 }
-
 export async function rejectAdAction(id: number, reason: string) {
     const supabase = await createClient();
     const { error } = await supabase.from('ads').update({ status: 'reddedildi', admin_note: reason }).eq('id', id);
     if (error) return { success: false, error: error.message };
     return { success: true };
 }
-
 export async function deleteAdSafeAction(adId: number) {
     const supabase = await createClient();
     await supabase.from('ads').update({ status: 'pasif' }).eq('id', adId);
     revalidatePath('/bana-ozel/ilanlarim');
-    return { message: 'Silindi' };
+    return { message: 'Deleted' };
 }
-
-// --- KULLANICI & PROFİL ---
 export async function updateProfileAction(d: any) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -170,14 +186,11 @@ export async function updateProfileAction(d: any) {
     const { error } = await supabase.from('profiles').update(updates).eq('id', user.id);
     return { success: !error, error: error ? error.message : null };
 }
-
 export async function updatePasswordAction(password: string) {
     const supabase = await createClient();
     const { error } = await supabase.auth.updateUser({ password });
     return { success: !error, error: error?.message };
 }
-
-// --- MAĞAZA İŞLEMLERİ ---
 export async function getMyStoreServer() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -185,72 +198,61 @@ export async function getMyStoreServer() {
   const { data } = await supabase.from('stores').select('*').eq('user_id', user.id).single();
   return data;
 }
-
 export async function createStoreAction(formData: any) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
+  if (!user) return { error: 'Login required.' };
   const { error } = await supabase.from('stores').insert([{ ...formData, user_id: user.id }]);
-  if (error) return { error: 'Hata oluştu.' };
+  if (error) return { error: 'Error occurred.' };
   await supabase.from('profiles').update({ role: 'store' }).eq('id', user.id);
   revalidatePath('/bana-ozel/magazam');
   return { success: true };
 }
-
 export async function updateStoreAction(formData: any) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return { error: 'Oturum açmanız gerekiyor.' };
+  if (!user) return { error: 'Login required.' };
   const { error } = await supabase.from('stores').update(formData).eq('user_id', user.id);
-  if (error) return { error: 'Güncelleme başarısız.' };
+  if (error) return { error: 'Update failed.' };
   revalidatePath('/bana-ozel/magazam');
   return { success: true };
 }
-
 export async function getStoreBySlugServer(slug: string) {
   const supabase = await createClient();
   const { data } = await supabase.from('stores').select('*').eq('slug', slug).single();
   return data;
 }
-
 export async function getStoreAdsServer(userId: string) {
   const supabase = await createClient();
   const { data } = await supabase.from('ads').select('*').eq('user_id', userId).eq('status', 'yayinda');
   return data || [];
 }
-
-// --- DİĞERLERİ ---
 export async function getAdFavoriteCount(adId: number) {
     const supabase = await createClient();
     const { count } = await supabase.from('favorites').select('*', { count: 'exact', head: true }).eq('ad_id', adId);
     return count || 0;
 }
-
 export async function getSellerReviewsServer(id: string) {
     const supabase = await createClient();
     const { data } = await supabase.from('reviews').select('*').eq('target_user_id', id);
     return data || [];
 }
-
 export async function createReviewAction(targetId: string, rating: number, comment: string, adId: number) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { error: 'Giriş gerekli' };
+    if (!user) return { error: 'Login required' };
     await supabase.from('reviews').insert({ target_user_id: targetId, reviewer_id: user.id, rating, comment, ad_id: adId });
     return { success: true };
 }
-
 export async function getRelatedAdsServer(cat: string, id: number, price?: number) {
     const supabase = await createClient();
     const { data } = await supabase.from('ads').select('*').eq('category', cat).neq('id', id).limit(4);
     return data || [];
 }
-
 export async function incrementViewCountAction(id: number) {
     const supabase = await createClient();
     await supabase.rpc('increment_view_count', { ad_id_input: id });
 }
-
 export async function getUserDashboardStats() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -258,7 +260,6 @@ export async function getUserDashboardStats() {
     const { data } = await supabase.from('ads').select('status, view_count, price').eq('user_id', user.id);
     return data || [];
 }
-
 export async function createReportAction(adId: number, reason: string, description: string) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -266,29 +267,23 @@ export async function createReportAction(adId: number, reason: string, descripti
     if (error) return { error: error.message };
     return { success: true };
 }
-
 export async function getAuditLogsServer() {
     const supabase = await createClient();
     const { data } = await supabase.from('audit_logs').select('*, profiles(full_name, email)').order('created_at', { ascending: false }).limit(100);
     return data || [];
 }
-
 export async function getAdsByIds(ids: number[]) {
     if(!ids.length) return [];
     const supabase = await createClient();
     const { data } = await supabase.from('ads').select('*').in('id', ids);
     return data || [];
 }
-
 export async function getPageBySlugServer(slug: string) {
-    return { title: 'Kurumsal', content: '<p>İçerik</p>' };
+    return { title: 'Corporate Page', content: '<p>Content...</p>' };
 }
-
 export async function getHelpContentServer() {
     return { categories: [], faqs: [] };
 }
-
-// Deprecated or Placeholders
 export async function activateDopingAction(id: number, types: string[]) { return { success: true } }
 export async function getAdminStatsServer() { return { totalUsers: 0, activeAds: 0, totalRevenue: 0 }; }
 export async function getLocationsServer() { return []; }
