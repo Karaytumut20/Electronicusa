@@ -11,200 +11,216 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 FIXING MENU POSITION: ANCHORING EXACTLY TO AVATAR...\n" +
+    "\n🚀 REMOVING MAINTENANCE MODE FEATURE (FIXED)...\n" +
     colors.reset,
 );
 
 const filesToUpdate = [
+  // 1. Admin Actions: Bakım modu parametresi kaldırıldı
   {
-    path: "components/Header.tsx",
+    path: "lib/adminActions.ts",
+    content: `'use server'
+import { createClient } from '@/lib/supabase/server';
+import { revalidatePath } from 'next/cache';
+
+// --- EXISTING FUNCTIONS (Kept as is) ---
+
+export async function getAdminStats() {
+  const supabase = await createClient();
+  const { count: users } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+  const { count: ads } = await supabase.from('ads').select('*', { count: 'exact', head: true });
+  const { count: active } = await supabase.from('ads').select('*', { count: 'exact', head: true }).eq('status', 'yayinda');
+  return { users: users || 0, ads: ads || 0, active: active || 0, revenue: 0 };
+}
+
+export async function getAdminAds() {
+  const supabase = await createClient();
+  const { data } = await supabase.from('ads').select('*, profiles(full_name, email)').order('created_at', { ascending: false });
+  return data || [];
+}
+
+export async function approveAdAdmin(id: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('ads').update({ status: 'yayinda' }).eq('id', id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/admin/listings');
+  return { success: true };
+}
+
+export async function rejectAdAdmin(id: number) {
+  const supabase = await createClient();
+  const { error } = await supabase.from('ads').update({ status: 'reddedildi' }).eq('id', id);
+  if (error) return { success: false, error: error.message };
+  revalidatePath('/admin/listings');
+  return { success: true };
+}
+
+export async function deleteAdAdmin(id: number) {
+  const supabase = await createClient();
+  const { data: ad } = await supabase.from('ads').select('images, image').eq('id', id).single();
+  const { error } = await supabase.from('ads').delete().eq('id', id);
+
+  if (error) return { success: false, error: error.message };
+
+  try {
+      const imagesToDelete = [];
+      if (ad?.image) imagesToDelete.push(ad.image);
+      if (ad?.images && Array.isArray(ad.images)) {
+          ad.images.forEach((img: string) => imagesToDelete.push(img));
+      }
+      const paths = imagesToDelete.map(url => {
+          const parts = url.split('/ads/');
+          return parts.length > 1 ? parts[1] : null;
+      }).filter(p => p !== null);
+
+      if (paths.length > 0) {
+          await supabase.storage.from('ads').remove(paths);
+      }
+  } catch (storageErr) {
+      console.error("Storage cleanup warning:", storageErr);
+  }
+
+  revalidatePath('/admin/listings');
+  return { success: true };
+}
+
+export async function updateUserAdminAction(userId: string, data: any) {
+    const supabase = await createClient();
+    const { data: currentUser } = await supabase.auth.getUser();
+    const { data: currentProfile } = await supabase.from('profiles').select('role').eq('id', currentUser?.user?.id).single();
+
+    if (currentProfile?.role !== 'admin') {
+        return { success: false, error: 'Unauthorized.' };
+    }
+
+    const { error } = await supabase.from('profiles').update({
+        full_name: data.full_name,
+        role: data.role,
+        status: data.status
+    }).eq('id', userId);
+
+    if (error) return { success: false, error: error.message };
+    revalidatePath('/admin/users');
+    return { success: true };
+}
+
+// --- SYSTEM SETTINGS (Updated: Removed Maintenance Mode) ---
+
+export async function getSystemSettings() {
+    const supabase = await createClient();
+    const { data } = await supabase.from('system_settings').select('site_name').eq('id', 1).single();
+    return data || { site_name: 'ElectronicUSA' };
+}
+
+export async function updateSystemSettings(formData: { site_name: string }) {
+    const supabase = await createClient();
+
+    const { data: { user } } = await supabase.auth.getUser();
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single();
+
+    if (profile?.role !== 'admin') {
+        return { success: false, error: 'You do not have permission.' };
+    }
+
+    // maintenance_mode alanı çıkarıldı
+    const { error } = await supabase.from('system_settings').upsert({
+        id: 1,
+        site_name: formData.site_name,
+        updated_at: new Date().toISOString()
+    });
+
+    if (error) return { success: false, error: error.message };
+
+    revalidatePath('/');
+    return { success: true };
+}
+`,
+  },
+  // 2. Admin Settings Page: Bakım modu UI'ı kaldırıldı
+  {
+    path: "app/admin/settings/page.tsx",
     content: `"use client";
-import React, { useState } from 'react';
-import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Search, Plus, User, X, Home, List, MessageSquare, Settings, LogOut, Star } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import React, { useEffect, useState } from 'react';
+import { Save, Loader2, Globe } from 'lucide-react';
+import { getSystemSettings, updateSystemSettings } from '@/lib/adminActions';
+import { useToast } from '@/context/ToastContext';
 
-export default function Header() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
-  const pathname = usePathname();
-  const { user, logout } = useAuth();
+export default function AdminSettingsPage() {
+  const { addToast } = useToast();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  // Hide search on auth pages
-  const hideSearch = pathname === '/login' || pathname === '/register' || pathname.startsWith('/admin');
+  const [settings, setSettings] = useState({
+      site_name: ''
+  });
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) router.push(\`/search?q=\${encodeURIComponent(searchTerm)}\`);
+  useEffect(() => {
+    async function loadSettings() {
+        const data = await getSystemSettings();
+        if (data) {
+            setSettings({
+                site_name: data.site_name || 'ElectronicUSA'
+            });
+        }
+        setLoading(false);
+    }
+    loadSettings();
+  }, []);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+        const res = await updateSystemSettings(settings);
+        if (res.success) {
+            addToast('System settings saved successfully.', 'success');
+        } else {
+            addToast(res.error || 'Save failed.', 'error');
+        }
+    } catch (err) {
+        addToast('An unexpected error occurred.', 'error');
+    } finally {
+        setSaving(false);
+    }
   };
 
-  const closeMenu = () => setIsMenuOpen(false);
+  if (loading) {
+      return <div className="p-10 flex justify-center"><Loader2 className="animate-spin text-indigo-600" /></div>;
+  }
 
   return (
-    <>
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 h-[70px] md:h-[80px] flex items-center justify-center sticky top-0 z-50 transition-all shadow-sm">
-        <div className="container max-w-7xl flex items-center justify-between px-4 md:px-6 h-full gap-4 relative">
+    <div className="max-w-3xl space-y-6">
+      <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-slate-800">System Settings</h1>
+      </div>
 
-          {/* LEFT: LOGO */}
-          <div className="flex items-center gap-2">
-            <Link href="/" className="flex items-center gap-2 group shrink-0">
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-lg shadow-indigo-200">E</div>
-              <span className="font-black text-lg md:text-2xl tracking-tighter text-slate-800 hidden xs:block">Electronic<span className="text-indigo-600">USA</span></span>
-            </Link>
-          </div>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 space-y-8">
 
-          {/* MIDDLE: SEARCH BAR (Desktop) */}
-          {!hideSearch && (
-            <div className="flex-1 max-w-[500px] hidden lg:block">
-              <form onSubmit={handleSearch} className="relative group">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search brands, models or products..."
-                  className="w-full h-[46px] pl-12 pr-4 bg-slate-50 border-none rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none"
-                />
-                <Search size={18} className="absolute left-4 top-[14px] text-slate-400 group-focus-within:text-indigo-600" />
-              </form>
-            </div>
-          )}
-
-          {/* RIGHT: ACTIONS & UNIFIED USER MENU */}
-          <div className="flex items-center gap-2 md:gap-4">
-            <Link href="/post-ad" className="bg-indigo-600 text-white p-2.5 md:px-5 md:py-2.5 rounded-full md:rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
-              <Plus size={20}/> <span className="hidden md:inline">Post Ad</span>
-            </Link>
-
-            {/* --- USER MENU CONTAINER (RELATIVE positioning is key here) --- */}
-            <div className="relative">
-                {/* TRIGGER BUTTON */}
-                <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="w-10 h-10 rounded-full bg-slate-100 border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden flex items-center justify-center text-slate-600 active:scale-95"
-                >
-                    {user?.avatar ? (
-                        <img src={user.avatar} className="w-full h-full object-cover" alt="User" />
-                    ) : (
-                        <User size={20} />
-                    )}
-                </button>
-
-                {/* --- DROPDOWN MENU (ABSOLUTE positioned relative to the button) --- */}
-                {isMenuOpen && (
-                  <>
-                    {/* Backdrop to close menu when clicking outside */}
-                    <div className="fixed inset-0 z-40 cursor-default" onClick={closeMenu}></div>
-
-                    {/* The Menu Itself */}
-                    <div className="absolute right-0 top-full mt-3 w-[280px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right z-50">
-
-                        {/* Header Section */}
-                        <div className="bg-slate-900 text-white p-5 shrink-0 relative">
-                            <button onClick={closeMenu} className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
-                                <X size={16} />
-                            </button>
-
-                            {user ? (
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-sm shadow-sm shrink-0">
-                                        {user.name?.charAt(0).toUpperCase() || 'U'}
-                                    </div>
-                                    <div className="min-w-0">
-                                        <p className="font-bold text-sm truncate">{user.name}</p>
-                                        <p className="text-[10px] text-indigo-300 truncate">{user.email}</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="text-center">
-                                    <p className="font-bold text-sm mb-1">Welcome</p>
-                                    <p className="text-[10px] text-slate-400 mb-3">Login to manage ads.</p>
-                                    <div className="flex gap-2">
-                                        <Link href="/login" onClick={closeMenu} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-bold text-xs transition-colors">Login</Link>
-                                        <Link href="/register" onClick={closeMenu} className="flex-1 bg-white/10 hover:bg-white/20 text-white py-2 rounded-lg font-bold text-xs transition-colors">Register</Link>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Menu Links */}
-                        <div className="py-2 bg-white max-h-[50vh] overflow-y-auto">
-                            <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menu</p>
-                            <ul className="text-sm text-slate-700 font-medium space-y-1 px-2">
-                                <li>
-                                    <Link href="/" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                        <Home size={16} className="text-indigo-600"/> Home
-                                    </Link>
-                                </li>
-                                {user && (
-                                <>
-                                    <li>
-                                        <Link href="/dashboard" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                            <User size={16} className="text-indigo-600"/> Dashboard
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/my-ads" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                            <List size={16} className="text-indigo-600"/> My Listings
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/messages" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                            <MessageSquare size={16} className="text-indigo-600"/> Messages
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/favorites" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                            <Star size={16} className="text-indigo-600"/> Favorites
-                                        </Link>
-                                    </li>
-                                    <li>
-                                        <Link href="/dashboard/settings" onClick={closeMenu} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                                            <Settings size={16} className="text-indigo-600"/> Settings
-                                        </Link>
-                                    </li>
-                                </>
-                                )}
-                            </ul>
-                        </div>
-
-                        {/* Footer / Logout */}
-                        {user && (
-                            <div className="p-2 border-t border-gray-100 bg-gray-50">
-                                <button
-                                    onClick={() => { logout(); closeMenu(); }}
-                                    className="w-full flex items-center justify-center gap-2 px-4 py-2 text-xs font-bold text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-                                >
-                                    <LogOut size={14}/> Logout
-                                </button>
-                            </div>
-                        )}
-                    </div>
-                  </>
-                )}
-            </div>
-
-          </div>
-        </div>
-      </header>
-
-      {/* MOBILE SEARCH BAR */}
-      {!hideSearch && (
-        <div className="lg:hidden bg-slate-50 px-4 py-3 border-b border-slate-200 sticky top-[70px] z-[40] shadow-sm">
-          <form onSubmit={handleSearch} className="relative">
+        {/* Site Name */}
+        <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2 flex items-center gap-2">
+                <Globe size={16} className="text-slate-400"/> Site Name
+            </label>
+            <p className="text-xs text-slate-500 mb-2">The name that appears in the browser title and logos.</p>
             <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search..."
-              className="w-full h-[44px] pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
+                value={settings.site_name}
+                onChange={(e) => setSettings({...settings, site_name: e.target.value})}
+                className="w-full border border-gray-300 p-2.5 rounded-lg outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 transition-all"
+                placeholder="Ex: ElectronicUSA"
             />
-            <Search size={18} className="absolute left-3.5 top-[13px] text-slate-400" />
-          </form>
         </div>
-      )}
-    </>
+
+        <div className="pt-4 border-t border-gray-100">
+            <button
+                onClick={handleSave}
+                disabled={saving}
+                className="bg-indigo-600 text-white px-6 py-3 rounded-lg font-bold flex items-center gap-2 hover:bg-indigo-700 disabled:opacity-70 transition-all shadow-md shadow-indigo-100"
+            >
+                {saving ? <Loader2 size={18} className="animate-spin"/> : <Save size={18}/>}
+                Save Changes
+            </button>
+        </div>
+      </div>
+    </div>
   );
 }
 `,
@@ -218,7 +234,7 @@ filesToUpdate.forEach((file) => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, file.content.trim());
     console.log(
-      colors.green + "✔ " + file.path + " updated successfully." + colors.reset,
+      colors.green + "✔ " + file.path + " successfully updated." + colors.reset,
     );
   } catch (err) {
     console.error(colors.bold + "✘ Error: " + err.message + colors.reset);
@@ -227,6 +243,6 @@ filesToUpdate.forEach((file) => {
 
 console.log(
   colors.green +
-    "\n✅ Menu fixed! It now opens RELATIVE to the avatar button, guaranteeing alignment on all screen sizes." +
+    "\n✅ Maintenance Mode removed from Admin Settings and Actions." +
     colors.reset,
 );

@@ -11,13 +11,16 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
   const liked = isFavorite(ad.id);
 
   const priceDisplay = formatPrice(ad.price, ad.currency);
-  const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=Resim+Yok';
+  const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=No+Image';
+
+  // Format Date to English
+  const dateStr = new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
   return (
     <Link href={`/ilan/${ad.id}`} className="group block h-full">
       <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
 
-        {/* RESİM ALANI */}
+        {/* IMAGE */}
         <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-slate-50">
           <Image
             src={imageUrl}
@@ -27,16 +30,16 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
             sizes="(max-width: 768px) 50vw, 25vw"
           />
 
-          {/* BADGES */}
+          {/* BADGES (ENGLISH) */}
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {ad.is_urgent && (
               <span className="bg-rose-500 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg">
-                <Zap size={10} fill="currentColor"/> ACİL
+                <Zap size={10} fill="currentColor"/> URGENT
               </span>
             )}
             {ad.is_vitrin && (
               <span className="bg-yellow-400 text-black text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg">
-                VİTRİN
+                FEATURED
               </span>
             )}
           </div>
@@ -49,7 +52,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
           </button>
         </div>
 
-        {/* İÇERİK ALANI */}
+        {/* CONTENT */}
         <div className="p-2.5 md:p-4 flex-1 flex flex-col">
           <h3 className="font-bold text-slate-800 text-[11px] md:text-sm leading-tight line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
             {ad.title}
@@ -64,7 +67,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
                 <MapPin size={10} /> {ad.city}
               </span>
               <span className="font-medium whitespace-nowrap">
-                {new Date(ad.created_at).toLocaleDateString('tr-TR', { month: 'short', day: 'numeric' })}
+                {dateStr}
               </span>
             </div>
           </div>

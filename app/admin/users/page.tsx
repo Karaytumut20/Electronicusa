@@ -1,24 +1,35 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Search, MoreVertical, Shield, Ban, CheckCircle } from 'lucide-react';
-import { createClient } from '@/lib/supabase/client'; // DÜZELTME: createClient import edildi
+import { Search, MoreVertical, CheckCircle, Edit, Ban, Loader2 } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import AdminEditUserModal from '@/components/modals/AdminEditUserModal';
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  // DÜZELTME: İstemci burada oluşturuldu
+  // Edit State
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isEditOpen, setIsEditOpen] = useState(false);
+
   const supabase = createClient();
 
+  const loadUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
+    if(data) setUsers(data);
+    setLoading(false);
+  };
+
   useEffect(() => {
-    async function load() {
-        const { data } = await supabase.from('profiles').select('*').order('created_at', { ascending: false });
-        if(data) setUsers(data);
-        setLoading(false);
-    }
-    load();
+    loadUsers();
   }, []);
+
+  const handleEdit = (user) => {
+      setSelectedUser(user);
+      setIsEditOpen(true);
+  };
 
   const filtered = users.filter(u =>
     (u.full_name?.toLowerCase().includes(search.toLowerCase())) ||
@@ -52,12 +63,17 @@ export default function AdminUsersPage() {
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-                {loading ? <tr><td colSpan={5} className="p-6 text-center">Loading...</td></tr> : filtered.map(user => (
-                    <tr key={user.id} className="hover:bg-gray-50">
+                {loading ? (
+                    <tr><td colSpan={5} className="p-10 text-center"><Loader2 className="animate-spin mx-auto text-indigo-600"/></td></tr>
+                ) : filtered.length === 0 ? (
+                    <tr><td colSpan={5} className="p-8 text-center text-gray-500">No users found.</td></tr>
+                ) : (
+                    filtered.map(user => (
+                    <tr key={user.id} className="hover:bg-gray-50 transition-colors group">
                         <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold">
-                                    {user.full_name?.charAt(0) || 'U'}
+                                <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border border-indigo-200">
+                                    {user.full_name?.charAt(0).toUpperCase() || 'U'}
                                 </div>
                                 <div>
                                     <p className="font-bold text-slate-900">{user.full_name || 'No Name'}</p>
@@ -66,26 +82,49 @@ export default function AdminUsersPage() {
                             </div>
                         </td>
                         <td className="px-6 py-4">
-                            <span className={`px-2 py-1 rounded text-xs font-bold ${user.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-gray-100 text-gray-600'}`}>
+                            <span className={`px-2.5 py-1 rounded-md text-xs font-bold uppercase tracking-wide ${
+                                user.role === 'admin' ? 'bg-purple-100 text-purple-700 border border-purple-200' :
+                                user.role === 'store' ? 'bg-blue-100 text-blue-700 border border-blue-200' :
+                                'bg-gray-100 text-gray-600 border border-gray-200'
+                            }`}>
                                 {user.role || 'user'}
                             </span>
                         </td>
                         <td className="px-6 py-4">
-                            <span className="flex items-center gap-1 text-green-600 text-xs font-bold bg-green-50 px-2 py-1 rounded w-fit">
-                                <CheckCircle size={12}/> Active
+                            <span className={`flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-md w-fit border ${
+                                user.status === 'banned' ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'
+                            }`}>
+                                {user.status === 'banned' ? <Ban size={12}/> : <CheckCircle size={12}/>}
+                                {user.status === 'banned' ? 'Banned' : 'Active'}
                             </span>
                         </td>
                         <td className="px-6 py-4 text-gray-500">
                             {new Date(user.created_at).toLocaleDateString()}
                         </td>
                         <td className="px-6 py-4 text-right">
-                            <button className="text-gray-400 hover:text-indigo-600"><MoreVertical size={18}/></button>
+                            <button
+                                onClick={() => handleEdit(user)}
+                                className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                                title="Edit User"
+                            >
+                                <Edit size={18}/>
+                            </button>
                         </td>
                     </tr>
-                ))}
+                )))}
             </tbody>
         </table>
       </div>
+
+      {/* EDIT MODAL */}
+      {selectedUser && (
+          <AdminEditUserModal
+            isOpen={isEditOpen}
+            onClose={() => setIsEditOpen(false)}
+            user={selectedUser}
+            onSuccess={loadUsers}
+          />
+      )}
     </div>
   );
 }

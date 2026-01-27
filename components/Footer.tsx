@@ -17,7 +17,7 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-slate-900 mb-4 text-sm uppercase tracking-widest">Services</h4>
             <ul className="space-y-3">
-              <li><Link href="#" className="hover:text-indigo-600">Post Ad</Link></li>
+              <li><Link href="/post-ad" className="hover:text-indigo-600">Post Ad</Link></li>
               <li><Link href="#" className="hover:text-indigo-600">Store Solutions</Link></li>
               <li><Link href="#" className="hover:text-indigo-600">Secure Payment</Link></li>
             </ul>

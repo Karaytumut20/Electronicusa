@@ -57,9 +57,8 @@ export default function Header() {
               <Plus size={20}/> <span className="hidden md:inline">Post Ad</span>
             </Link>
 
-            {/* --- USER MENU CONTAINER (RELATIVE positioning is key here) --- */}
+            {/* --- USER MENU CONTAINER --- */}
             <div className="relative">
-                {/* TRIGGER BUTTON */}
                 <button
                     onClick={() => setIsMenuOpen(!isMenuOpen)}
                     className="w-10 h-10 rounded-full bg-slate-100 border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden flex items-center justify-center text-slate-600 active:scale-95"
@@ -71,21 +70,16 @@ export default function Header() {
                     )}
                 </button>
 
-                {/* --- DROPDOWN MENU (ABSOLUTE positioned relative to the button) --- */}
+                {/* DROPDOWN MENU */}
                 {isMenuOpen && (
                   <>
-                    {/* Backdrop to close menu when clicking outside */}
                     <div className="fixed inset-0 z-40 cursor-default" onClick={closeMenu}></div>
-
-                    {/* The Menu Itself */}
                     <div className="absolute right-0 top-full mt-3 w-[280px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right z-50">
 
-                        {/* Header Section */}
                         <div className="bg-slate-900 text-white p-5 shrink-0 relative">
                             <button onClick={closeMenu} className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
                                 <X size={16} />
                             </button>
-
                             {user ? (
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-sm shadow-sm shrink-0">
@@ -108,7 +102,6 @@ export default function Header() {
                             )}
                         </div>
 
-                        {/* Menu Links */}
                         <div className="py-2 bg-white max-h-[50vh] overflow-y-auto">
                             <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menu</p>
                             <ul className="text-sm text-slate-700 font-medium space-y-1 px-2">
@@ -149,7 +142,6 @@ export default function Header() {
                             </ul>
                         </div>
 
-                        {/* Footer / Logout */}
                         {user && (
                             <div className="p-2 border-t border-gray-100 bg-gray-50">
                                 <button
@@ -169,18 +161,18 @@ export default function Header() {
         </div>
       </header>
 
-      {/* MOBILE SEARCH BAR */}
+      {/* MOBILE SEARCH BAR (Fixed Position & Spacing) */}
       {!hideSearch && (
-        <div className="lg:hidden bg-slate-50 px-4 py-3 border-b border-slate-200 sticky top-[70px] z-[40] shadow-sm">
+        <div className="lg:hidden bg-slate-50 px-4 py-4 border-b border-slate-200 sticky top-[70px] z-[40] shadow-sm">
           <form onSubmit={handleSearch} className="relative">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search..."
-              className="w-full h-[44px] pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all"
+              className="w-full h-[48px] pl-11 pr-4 bg-white border border-slate-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent shadow-sm transition-all placeholder:text-slate-400"
             />
-            <Search size={18} className="absolute left-3.5 top-[13px] text-slate-400" />
+            <Search size={20} className="absolute left-3.5 top-[14px] text-slate-400" />
           </form>
         </div>
       )}

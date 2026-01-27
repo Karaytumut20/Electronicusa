@@ -12,7 +12,7 @@ export default function DashboardSidebar() {
   const menuItems = [
     { href: '/dashboard', label: 'Overview', icon: Home },
     { href: '/dashboard/my-ads', label: 'My Listings', icon: List },
-    { href: '/dashboard/favorites', label: 'My Favorites', icon: Star },
+    { href: '/dashboard/favorites', label: 'Favorites', icon: Star },
     { href: '/dashboard/messages', label: 'Messages', icon: MessageSquare },
     { href: '/dashboard/my-store', label: 'My Store', icon: Store },
     { href: '/dashboard/wallet', label: 'My Wallet', icon: Wallet },
@@ -25,7 +25,7 @@ export default function DashboardSidebar() {
       <div className="p-6 border-b border-gray-50 bg-gradient-to-br from-slate-50 to-white">
         <div className="flex items-center gap-4">
           <div className="w-12 h-12 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-lg border-2 border-white shadow-sm shrink-0">
-            {user?.name?.charAt(0) || 'U'}
+            {user?.name?.charAt(0).toUpperCase() || 'U'}
           </div>
           <div className="overflow-hidden">
             <h3 className="font-bold text-slate-800 truncate">{user?.name || 'User'}</h3>
