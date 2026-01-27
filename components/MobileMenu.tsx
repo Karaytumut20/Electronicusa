@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { X, Home, List, MessageSquare, Settings, LogOut, Star, User } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 
+// This component is now the GLOBAL USER MENU for both Desktop and Mobile
 export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { user, logout } = useAuth();
 
@@ -11,26 +12,25 @@ export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClo
 
   return (
     <>
-      {/* 1. BACKDROP (Background - Click to close) */}
+      {/* 1. BACKDROP (Transparent background - click to close) */}
       <div
-        className="fixed inset-0 z-[90] bg-black/20 backdrop-blur-[1px] transition-opacity"
+        className="fixed inset-0 z-[90] bg-black/10 backdrop-blur-[1px] transition-opacity cursor-default"
         onClick={onClose}
       ></div>
 
-      {/* 2. DROPDOWN MENU */}
-      <div className="fixed top-[75px] right-4 z-[100] w-[300px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right">
+      {/* 2. DROPDOWN MENU CONTENT */}
+      <div className="fixed top-[75px] right-4 md:right-6 z-[100] w-[300px] bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right">
 
-        {/* Top Section: User Info or Login */}
+        {/* Top Header Section (Dark Blue) */}
         <div className="bg-slate-900 text-white p-5 shrink-0 relative">
-          {/* Close button (Optional for dropdowns but good for UX) */}
           <button onClick={onClose} className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
             <X size={18} />
           </button>
 
           {user ? (
             <div className="flex items-center gap-3">
-               <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-lg shadow-sm">
-                 {user.name?.charAt(0) || 'U'}
+               <div className="w-12 h-12 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-lg shadow-sm shrink-0">
+                 {user.name?.charAt(0).toUpperCase() || 'U'}
                </div>
                <div className="min-w-0">
                   <p className="font-bold text-base truncate">{user.name}</p>
@@ -49,9 +49,9 @@ export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClo
           )}
         </div>
 
-        {/* Middle Section: Menu Links */}
+        {/* Menu Links */}
         <div className="flex-1 overflow-y-auto py-2 bg-white max-h-[60vh]">
-          <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Menu</p>
+          <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Navigation</p>
           <ul className="text-sm text-slate-700 font-medium space-y-1 px-2">
             <li>
               <Link href="/" onClick={onClose} className="flex items-center gap-3 px-4 py-3 hover:bg-indigo-50 rounded-xl transition-colors">
@@ -90,7 +90,7 @@ export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClo
           </ul>
         </div>
 
-        {/* Bottom Section: Logout (Only if logged in) */}
+        {/* Logout Button */}
         {user && (
           <div className="p-3 border-t border-gray-100 bg-gray-50">
             <button
