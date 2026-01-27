@@ -1,7 +1,16 @@
+"use client";
 import React from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export default function Footer() {
+  const pathname = usePathname();
+
+  // --- KRİTİK DÜZELTME: Admin panelinde Footer'ı GİZLE ---
+  if (pathname && pathname.startsWith('/admin')) {
+    return null;
+  }
+
   return (
     <footer className="mt-12 border-t border-slate-200 bg-white text-xs text-slate-500">
       <div className="container mx-auto px-6 max-w-7xl py-12">
