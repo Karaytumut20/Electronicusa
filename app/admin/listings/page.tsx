@@ -7,9 +7,9 @@ import { useToast } from '@/context/ToastContext';
 import Link from 'next/link';
 
 export default function AdminListingsPage() {
-  const [ads, setAds] = useState<any[]>([]);
+  const [ads, setAds] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [processing, setProcessing] = useState<number | null>(null);
+  const [processing, setProcessing] = useState(null);
   const [filter, setFilter] = useState('all');
   const { addToast } = useToast();
 
@@ -20,23 +20,18 @@ export default function AdminListingsPage() {
     setLoading(false);
   };
 
-  useEffect(() => {
-    loadAds();
-  }, []);
+  useEffect(() => { loadAds(); }, []);
 
-  const handleAction = async (action: string, id: number) => {
+  const handleAction = async (action, id) => {
       if(!confirm(`Are you sure you want to ${action} this ad?`)) return;
-
       setProcessing(id);
       let res;
-
       if (action === 'approve') res = await approveAdAdmin(id);
       else if (action === 'reject') res = await rejectAdAdmin(id);
       else if (action === 'delete') res = await deleteAdAdmin(id);
 
       if (res?.success) {
           addToast(`Ad ${action}d successfully`, 'success');
-          // Optimistic update
           if (action === 'delete') {
               setAds(prev => prev.filter(ad => ad.id !== id));
           } else {
@@ -52,14 +47,14 @@ export default function AdminListingsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h1 className="text-2xl font-bold text-slate-800">Ad Management</h1>
-        <div className="flex gap-2 bg-white p-1 rounded-lg border border-gray-200">
+        <div className="flex gap-2 bg-white p-1 rounded-lg border border-gray-200 overflow-x-auto max-w-full">
             {['all', 'onay_bekliyor', 'yayinda', 'reddedildi'].map(status => (
                 <button
                     key={status}
                     onClick={() => setFilter(status)}
-                    className={`px-4 py-2 rounded-md text-xs font-bold capitalize transition-colors ${filter === status ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
+                    className={`px-4 py-2 rounded-md text-xs font-bold capitalize transition-colors whitespace-nowrap ${filter === status ? 'bg-indigo-600 text-white' : 'text-gray-600 hover:bg-gray-50'}`}
                 >
                     {status === 'onay_bekliyor' ? 'Pending' : (status === 'yayinda' ? 'Active' : (status === 'reddedildi' ? 'Rejected' : 'All'))}
                 </button>
@@ -69,7 +64,7 @@ export default function AdminListingsPage() {
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm whitespace-nowrap">
                 <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
                     <tr>
                         <th className="px-6 py-4">Image</th>
@@ -97,7 +92,7 @@ export default function AdminListingsPage() {
                                     <Link href={`/ilan/${ad.id}`} target="_blank" className="font-bold text-slate-900 truncate block hover:text-indigo-600 flex items-center gap-1">
                                         {ad.title} <ExternalLink size={10} className="opacity-50"/>
                                     </Link>
-                                    <p className="text-xs text-gray-500">{ad.profiles?.full_name || ad.profiles?.email || 'Unknown User'}</p>
+                                    <p className="text-xs text-gray-500 truncate">{ad.profiles?.full_name || ad.profiles?.email || 'Unknown User'}</p>
                                 </div>
                             </td>
                             <td className="px-6 py-4 font-bold text-indigo-700">

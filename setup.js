@@ -11,166 +11,159 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 CONNECTING HEADER TO DATABASE SETTINGS...\n" +
+    "\n🚀 ADMIN SIDEBAR MOBİL UYUMLU HALE GETİRİLİYOR...\n" +
     colors.reset,
 );
 
 const filesToUpdate = [
-  // 1. HEADER: Artık site ismini veritabanından (prop olarak) alıyor
+  // 1. AdminLayoutWrapper: Sidebar durumunu yöneten kapsayıcı
   {
-    path: "components/Header.tsx",
+    path: "components/admin/AdminLayoutWrapper.tsx",
     content: `"use client";
 import React, { useState } from 'react';
+import AdminSidebar from '@/components/AdminSidebar';
+import { Menu } from 'lucide-react';
+
+export default function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  return (
+    <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
+
+      {/* MOBILE HEADER (Sadece mobilde görünür - Sidebar'ı açar) */}
+      <div className="lg:hidden fixed top-0 left-0 w-full h-16 bg-[#1e293b] text-white flex items-center justify-between px-4 z-40 shadow-md">
+         <div className="flex items-center gap-2">
+            <span className="font-bold text-lg tracking-wide">ADMIN PANEL</span>
+         </div>
+         <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="p-2 hover:bg-white/10 rounded-lg transition-colors active:scale-95"
+         >
+            <Menu size={24} />
+         </button>
+      </div>
+
+      {/* SIDEBAR (Responsive - Mobilde açılır/kapanır, Masaüstünde sabit) */}
+      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+
+      {/* MAIN CONTENT (Masaüstünde sidebar kadar sağa itilir, Mobilde üstten boşluk bırakır) */}
+      <div className="flex-1 flex flex-col min-h-screen transition-all duration-300 lg:ml-64 pt-16 lg:pt-0">
+         <main className="p-4 md:p-8 overflow-x-hidden w-full">
+            {children}
+         </main>
+      </div>
+    </div>
+  );
+}
+`,
+  },
+  // 2. AdminSidebar: Responsive Tasarım ve Kapatma Butonu
+  {
+    path: "components/AdminSidebar.tsx",
+    content: `"use client";
+import React from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
-import { Search, Plus, User, X, Home, List, MessageSquare, Settings, LogOut, Star } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
-import MobileMenu from './MobileMenu';
+import { usePathname, useRouter } from 'next/navigation';
+import { LayoutDashboard, Users, List, Settings, FileText, LogOut, Tag, X } from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
 
-// Site ismi artık yukarıdan (Layout'tan) geliyor
-export default function Header({ siteName = 'ElectronicUSA' }: { siteName?: string }) {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter();
+export default function AdminSidebar({ isOpen, onClose }: { isOpen?: boolean; onClose?: () => void }) {
   const pathname = usePathname();
-  const { user, logout } = useAuth();
+  const router = useRouter();
+  const supabase = createClient();
 
-  const hideSearch = pathname === '/login' || pathname === '/register' || pathname.startsWith('/admin');
-
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchTerm.trim()) router.push(\`/search?q=\${encodeURIComponent(searchTerm)}\`);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/admin/login');
   };
 
-  const closeMenu = () => setIsMenuOpen(false);
-
-  // LOGO HARFİ: Veritabanından gelen ismin baş harfi
-  const logoLetter = siteName ? siteName.charAt(0).toUpperCase() : 'E';
-
-  // Marka ismini renklendirme (Son 3 harfi renkli yapalım, estetik olsun)
-  const renderBrandName = () => {
-     if (!siteName) return null;
-     if (siteName.length <= 3) return <span className="text-slate-800">{siteName}</span>;
-
-     const mainPart = siteName.slice(0, -3);
-     const coloredPart = siteName.slice(-3);
-
-     return (
-       <>
-         <span className="text-slate-800">{mainPart}</span>
-         <span className="text-indigo-600">{coloredPart}</span>
-       </>
-     );
-  };
+  const menuItems = [
+    { label: 'Overview', href: '/admin', icon: LayoutDashboard },
+    { label: 'Users', href: '/admin/users', icon: Users },
+    { label: 'Listings', href: '/admin/listings', icon: List },
+    { label: 'Categories', href: '/admin/categories', icon: Tag },
+    { label: 'System Logs', href: '/admin/logs', icon: FileText },
+    { label: 'Settings', href: '/admin/settings', icon: Settings },
+  ];
 
   return (
     <>
-      <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 h-[70px] md:h-[80px] flex items-center justify-center sticky top-0 z-50 transition-all shadow-sm">
-        <div className="container max-w-7xl flex items-center justify-between px-4 md:px-6 h-full gap-3 md:gap-4 relative">
+      {/* MOBİL İÇİN ARKA PLAN (Backdrop) */}
+      {/* Sadece mobilde ve menü açıkken görünür, tıklayınca kapatır */}
+      <div
+        className={\`fixed inset-0 bg-black/60 z-40 lg:hidden transition-opacity duration-300 \${isOpen ? 'opacity-100 visible' : 'opacity-0 invisible pointer-events-none'}\`}
+        onClick={onClose}
+      />
 
-          {/* LOGO & SITE NAME */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/" className="flex items-center gap-2 group">
-              {/* Dinamik Baş Harf */}
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-lg md:text-xl shadow-lg shadow-indigo-200 transition-all duration-300">
-                {logoLetter}
-              </div>
-              {/* Veritabanından Gelen İsim */}
-              <span className="font-black text-lg md:text-2xl tracking-tighter hidden md:block">
-                {renderBrandName()}
-              </span>
-            </Link>
-          </div>
-
-          {/* SEARCH BAR */}
-          {!hideSearch && (
-            <div className="flex-1 max-w-[600px]">
-              <form onSubmit={handleSearch} className="relative group w-full">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search..."
-                  className="w-full h-[40px] md:h-[46px] pl-10 md:pl-12 pr-4 bg-slate-100 border-none rounded-full focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all text-sm outline-none placeholder:text-slate-400"
-                />
-                <Search size={18} className="absolute left-3.5 md:left-4 top-[11px] md:top-[14px] text-slate-400 group-focus-within:text-indigo-600" />
-              </form>
-            </div>
-          )}
-
-          {/* ACTIONS & MENU */}
-          <div className="flex items-center gap-2 shrink-0">
-            <Link href="/post-ad" className="bg-indigo-600 text-white p-2 md:px-5 md:py-2.5 rounded-full md:rounded-xl text-sm font-bold shadow-md hover:bg-indigo-700 transition-all flex items-center gap-2">
-              <Plus size={20}/> <span className="hidden md:inline">Post Ad</span>
-            </Link>
-
-            <div className="relative">
-                <button
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    className="w-10 h-10 rounded-full bg-slate-100 border-2 border-transparent hover:border-indigo-200 transition-all overflow-hidden flex items-center justify-center text-slate-600 active:scale-95"
-                >
-                    {user?.avatar ? (
-                        <img src={user.avatar} className="w-full h-full object-cover" alt="User" />
-                    ) : (
-                        <User size={20} />
-                    )}
-                </button>
-                <MobileMenu isOpen={isMenuOpen} onClose={closeMenu} />
-            </div>
-
-          </div>
+      {/* SIDEBAR */}
+      <aside
+        className={\`
+          fixed top-0 left-0 h-full w-64 bg-[#1e293b] text-white z-50 shadow-2xl
+          transform transition-transform duration-300 ease-in-out
+          lg:translate-x-0 lg:fixed lg:shadow-none
+          \${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        \`}
+      >
+        {/* LOGO & HEADER */}
+        <div className="p-6 border-b border-slate-700 flex justify-between items-center h-20 lg:h-auto">
+          <h1 className="text-xl font-bold tracking-wider flex items-center gap-2">
+            <span className="bg-indigo-600 px-2 py-1 rounded text-sm shadow-lg">ADMIN</span>
+            <span>Panel</span>
+          </h1>
+          {/* Mobilde Kapatma Butonu */}
+          <button onClick={onClose} className="lg:hidden text-slate-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-md">
+            <X size={24} />
+          </button>
         </div>
-      </header>
+
+        {/* MENÜ LİNKLERİ */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+          {menuItems.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={onClose} // Mobilde linke tıklayınca menüyü kapat
+                className={\`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200 \${
+                  isActive
+                    ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-900/50'
+                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                }\`}
+              >
+                <item.icon size={18} />
+                <span>{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
+
+        {/* ÇIKIŞ BUTONU */}
+        <div className="p-4 border-t border-slate-700 bg-[#1e293b] absolute bottom-0 w-full">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 text-red-400 hover:text-red-300 hover:bg-red-500/10 w-full px-4 py-3 rounded-lg text-sm font-bold transition-all duration-200"
+          >
+            <LogOut size={18} /> Logout
+          </button>
+        </div>
+      </aside>
     </>
   );
 }
 `,
   },
-  // 2. LAYOUT: Veritabanından ismi çekip Header'a gönderiyor
+  // 3. Admin Layout: Wrapper'ı kullanarak yapıyı tamamla
   {
-    path: "app/layout.tsx",
+    path: "app/admin/layout.tsx",
     content: `import React from 'react';
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Providers } from "@/components/Providers";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import ModalRoot from "@/components/ModalRoot";
-import { getSystemSettings } from "@/lib/adminActions"; // Ayarları çekmek için
+import AdminLayoutWrapper from '@/components/admin/AdminLayoutWrapper';
 
-const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Marketplace - Global İlan Platformu",
-  description: "Dünyanın en büyük ilan platformu.",
-};
-
-export default async function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
-  // Veritabanından Site İsmini Çek
-  const settings = await getSystemSettings();
-  const siteName = settings?.site_name || 'ElectronicUSA'; // Varsayılan değer
-
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className="light">
-      <body className={inter.className}>
-        <Providers>
-          <div className="flex flex-col min-h-screen">
-            {/* Site ismini Header'a prop olarak gönder */}
-            <Header siteName={siteName} />
-            <main className="flex-1">
-              {children}
-            </main>
-            <Footer />
-          </div>
-          <ModalRoot />
-        </Providers>
-      </body>
-    </html>
+    <AdminLayoutWrapper>
+      {children}
+    </AdminLayoutWrapper>
   );
 }
 `,
@@ -184,15 +177,19 @@ filesToUpdate.forEach((file) => {
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(filePath, file.content.trim());
     console.log(
-      colors.green + "✔ " + file.path + " successfully updated." + colors.reset,
+      colors.green +
+        "✔ " +
+        file.path +
+        " başarıyla güncellendi." +
+        colors.reset,
     );
   } catch (err) {
-    console.error(colors.bold + "✘ Error: " + err.message + colors.reset);
+    console.error(colors.bold + "✘ Hata: " + err.message + colors.reset);
   }
 });
 
 console.log(
   colors.green +
-    "\n✅ System integrated! Header text and logo letter now come from the Database." +
+    "\n✅ Admin Sidebar artık responsive! Mobilde kaydırarak açabilir, masaüstünde sabit kullanabilirsiniz." +
     colors.reset,
 );
