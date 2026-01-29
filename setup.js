@@ -11,272 +11,118 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 TRANSLATING ALL REMAINING TURKISH UI ELEMENTS TO ENGLISH...\n" +
+    "\n🛠️  FIXING USER MENU POSITIONING VIA SETUP.JS...\n" +
     colors.reset,
 );
 
 // ---------------------------------------------------------
-// 1. UPDATE app/search/page.tsx (English Text & Date Format)
+// UPDATE components/MobileMenu.tsx
 // ---------------------------------------------------------
-const searchPageContent = `import React from 'react';
-import { getAdsServer, getCategoryTreeServer } from '@/lib/actions';
-import AdCard from '@/components/AdCard';
-import FilterSidebar from '@/components/FilterSidebar';
-import Pagination from '@/components/Pagination';
-import ViewToggle from '@/components/ViewToggle';
-import SmartCategoryGrid from '@/components/SmartCategoryGrid';
-import MobileFilterBar from '@/components/MobileFilterBar';
-import { SearchX, ArrowLeft, MapPin } from 'lucide-react';
+const mobileMenuContent = `"use client";
+import React from 'react';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/utils';
+import { X, Home, List, MessageSquare, Settings, LogOut, Star, User } from 'lucide-react';
+import { useAuth } from '@/context/AuthContext';
 
-// Helper to find category in tree
-function findCategory(categories: any[], slug: string): any {
-  for (const cat of categories) {
-    if (cat.slug === slug) return cat;
-    if (cat.subs) {
-      const found = findCategory(cat.subs, slug);
-      if (found) return found;
-    }
-  }
-  return null;
-}
+// Bu bileşen artık Navbar'daki avatarın hemen altında hizalanacak şekilde güncellendi.
+export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { user, logout } = useAuth();
 
-export default async function SearchPage(props: { searchParams: Promise<any> }) {
-  const searchParams = await props.searchParams;
-  const categories = await getCategoryTreeServer();
-
-  // --- SMART LISTING LOGIC ---
-  const currentCategorySlug = searchParams.category;
-  const selectedCategory = currentCategorySlug ? findCategory(categories, currentCategorySlug) : null;
-  const isLeafCategory = selectedCategory && (!selectedCategory.subs || selectedCategory.subs.length === 0);
-
-  const manualSearch = searchParams.showResults === 'true';
-  const textSearch = !!searchParams.q;
-  const isBrandSelected = !!searchParams.brand;
-  const isModelSelected = !!searchParams.model;
-
-  const shouldFetchAds = manualSearch || textSearch || isBrandSelected || isModelSelected || isLeafCategory;
-
-  let ads = [];
-  let totalPages = 0;
-  let count = 0;
-
-  if (shouldFetchAds) {
-    const res = await getAdsServer(searchParams);
-    ads = res.data;
-    totalPages = res.totalPages;
-    count = res.count;
-  }
-
-  const viewMode = (searchParams.view as 'grid' | 'list' | 'table') || 'grid';
-
-  return (
-    <div className="container mx-auto px-4 py-8 max-w-7xl">
-
-      <MobileFilterBar categories={categories} />
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-        <aside className="hidden lg:block lg:col-span-3">
-          <FilterSidebar categories={categories} />
-        </aside>
-
-        <main className="lg:col-span-9 min-w-0">
-
-           {!shouldFetchAds && (
-             <SmartCategoryGrid searchParams={searchParams} categories={categories} />
-           )}
-
-           {shouldFetchAds ? (
-             <>
-               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center animate-in fade-in">
-                  <div>
-                     <h1 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        {selectedCategory ? selectedCategory.title : 'Search Results'}
-                        {searchParams.brand && <span className="text-indigo-600">/ {searchParams.brand}</span>}
-                        {searchParams.q && <span className="text-indigo-600">/ "{searchParams.q}"</span>}
-                     </h1>
-                     <p className="text-xs text-slate-500 font-medium mt-1">{count} listings found</p>
-                  </div>
-                  <ViewToggle currentView={viewMode} />
-               </div>
-
-               {(!ads || ads.length === 0) ? (
-                 <div className="bg-white p-16 rounded-xl border border-gray-100 text-center">
-                   <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <SearchX size={40} className="text-slate-400"/>
-                   </div>
-                   <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
-                   <p className="text-slate-500 max-w-md mx-auto text-sm">We couldn't find any listings matching your criteria.</p>
-                   <Link href="/search" className="mt-6 inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline bg-indigo-50 px-6 py-3 rounded-lg transition-colors">
-                        <ArrowLeft size={16}/> Clear Filters
-                   </Link>
-                 </div>
-               ) : (
-                 <>
-                   {/* --- GRID VIEW (Default) --- */}
-                   {viewMode === 'grid' && (
-                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
-                       {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="grid" />)}
-                     </div>
-                   )}
-
-                   {/* --- LIST VIEW --- */}
-                   {viewMode === 'list' && (
-                     <div className="space-y-4">
-                       {ads.map((ad: any) => (
-                           <div key={ad.id} className="h-32">
-                               <AdCard ad={ad} viewMode="list" />
-                           </div>
-                       ))}
-                     </div>
-                   )}
-
-                   {/* --- TABLE VIEW (OPTIMIZED) --- */}
-                   {viewMode === 'table' && (
-                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-                       <div className="overflow-x-auto">
-                         <table className="w-full text-left text-sm whitespace-nowrap">
-                           <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 font-bold text-xs uppercase">
-                             <tr>
-                               <th className="px-4 py-3 w-16">Image</th>
-                               <th className="px-4 py-3">Details</th>
-                               <th className="px-4 py-3 text-right">Price</th>
-                             </tr>
-                           </thead>
-                           <tbody className="divide-y divide-gray-100">
-                             {ads.map((ad: any) => (
-                               <tr key={ad.id} className="hover:bg-slate-50 transition-colors group relative">
-                                 {/* Resim */}
-                                 <td className="px-4 py-2">
-                                   <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
-                                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                                      <img
-                                        src={ad.image || 'https://via.placeholder.com/100'}
-                                        alt={ad.title}
-                                        className="w-full h-full object-cover"
-                                      />
-                                      <Link href={\`/ilan/\${ad.id}\`} className="absolute inset-0" />
-                                   </div>
-                                 </td>
-
-                                 {/* Başlık, Konum ve Tarih */}
-                                 <td className="px-4 py-2">
-                                   <Link href={\`/ilan/\${ad.id}\`} className="font-bold text-slate-800 hover:text-indigo-600 block text-sm truncate max-w-[220px] mb-1" title={ad.title}>
-                                     {ad.title}
-                                   </Link>
-                                   <div className="flex items-center gap-3 text-[11px] text-slate-500">
-                                      <span className="flex items-center gap-1">
-                                        <MapPin size={12} className="text-slate-400"/> {ad.city} / {ad.district}
-                                      </span>
-                                      <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-                                      <span>
-                                        {new Date(ad.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
-                                      </span>
-                                   </div>
-                                 </td>
-
-                                 {/* Fiyat */}
-                                 <td className="px-4 py-2 font-bold text-indigo-700 text-sm text-right">
-                                   {formatPrice(ad.price, ad.currency)}
-                                 </td>
-                               </tr>
-                             ))}
-                           </tbody>
-                         </table>
-                       </div>
-                     </div>
-                   )}
-                 </>
-               )}
-
-               <div className="mt-10"><Pagination totalPages={totalPages} currentPage={Number(searchParams.page) || 1} /></div>
-             </>
-           ) : (
-             <div className="text-center text-gray-400 text-sm mt-4"></div>
-           )}
-        </main>
-      </div>
-    </div>
-  );
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "app/search/page.tsx"),
-    searchPageContent.trim(),
-  );
-  console.log(
-    colors.green +
-      "✔ app/search/page.tsx translated to English." +
-      colors.reset,
-  );
-} catch (e) {
-  console.error("Error updating search page:", e.message);
-}
-
-// ---------------------------------------------------------
-// 2. UPDATE components/MobileFilterBar.tsx (English Text)
-// ---------------------------------------------------------
-const mobileFilterContent = `"use client";
-import React, { useState } from 'react';
-import { Filter, X } from 'lucide-react';
-import FilterSidebar from '@/components/FilterSidebar';
-
-export default function MobileFilterBar({ categories }: { categories: any[] }) {
-  const [isOpen, setIsOpen] = useState(false);
+  if (!isOpen) return null;
 
   return (
     <>
-      {/* Mobile Filter Trigger Button */}
-      <div className="lg:hidden mb-4">
-        <button
-          onClick={() => setIsOpen(true)}
-          className="w-full bg-white border border-gray-200 text-slate-700 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
-        >
-          <Filter size={18} className="text-indigo-600" />
-          Filter & Sort
-        </button>
-      </div>
+      {/* 1. BACKDROP - Menü dışına tıklandığında kapanmasını sağlar */}
+      <div
+        className="fixed inset-0 z-[90] bg-transparent cursor-default"
+        onClick={onClose}
+      ></div>
 
-      {/* Full Screen Filter Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+      {/* 2. DROPDOWN MENU CONTENT */}
+      {/* absolute top-full right-0: Parent element olan 'relative' div'in tam altına ve sağına hizalar */}
+      <div className="absolute top-[calc(100%+10px)] right-0 z-[100] w-[280px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right">
 
-          {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white shrink-0">
-            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Filter size={20} className="text-indigo-600"/> Filters
-            </h2>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
-            >
-              <X size={20} />
-            </button>
-          </div>
+        {/* Üst Bilgi Alanı */}
+        <div className="bg-slate-900 text-white p-5 shrink-0 relative">
+          <button onClick={onClose} className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
+            <X size={16} />
+          </button>
 
-          {/* Scrollable Content */}
-          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
-             {/* Re-using the existing FilterSidebar but stripping sticky behavior via container */}
-             <div className="[&>div]:!static [&>div]:!shadow-none [&>div]:!border-none [&>div]:!p-0 [&>div]:bg-transparent">
-                <FilterSidebar categories={categories} />
-             </div>
-          </div>
-
-          {/* Footer Actions */}
-          <div className="p-4 border-t border-gray-100 bg-white shrink-0">
-            <button
-              onClick={() => setIsOpen(false)}
-              className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors"
-            >
-              Show Results
-            </button>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-3">
+               <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-sm shadow-sm shrink-0">
+                 {user.name?.charAt(0).toUpperCase() || 'U'}
+               </div>
+               <div className="min-w-0">
+                  <p className="font-bold text-sm truncate">{user.name}</p>
+                  <p className="text-[10px] text-indigo-300 truncate">{user.email}</p>
+               </div>
+            </div>
+          ) : (
+            <div className="text-center">
+              <p className="font-bold text-sm mb-1">Welcome</p>
+              <p className="text-[10px] text-slate-400 mb-3">Log in to manage your ads.</p>
+              <div className="flex gap-2">
+                <Link href="/login" onClick={onClose} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-lg font-bold text-[10px] transition-colors">Login</Link>
+                <Link href="/register" onClick={onClose} className="flex-1 bg-white/10 hover:bg-white/20 text-white py-1.5 rounded-lg font-bold text-[10px] transition-colors">Register</Link>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+
+        {/* Menü Linkleri */}
+        <div className="flex-1 overflow-y-auto py-2 bg-white max-h-[60vh]">
+          <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Navigation</p>
+          <ul className="text-xs text-slate-700 font-medium space-y-1 px-2">
+            <li>
+              <Link href="/" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                <Home size={16} className="text-indigo-600"/> Home
+              </Link>
+            </li>
+            {user && (
+              <>
+                <li>
+                  <Link href="/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                    <User size={16} className="text-indigo-600"/> Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/my-ads" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                    <List size={16} className="text-indigo-600"/> My Listings
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/messages" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                    <MessageSquare size={16} className="text-indigo-600"/> Messages
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                    <Star size={16} className="text-indigo-600"/> Favorites
+                  </Link>
+                </li>
+                <li>
+                  <Link href="/dashboard/settings" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
+                    <Settings size={16} className="text-indigo-600"/> Settings
+                  </Link>
+                </li>
+              </>
+            )}
+          </ul>
+        </div>
+
+        {/* Çıkış Butonu */}
+        {user && (
+          <div className="p-2 border-t border-gray-100 bg-gray-50">
+            <button
+              onClick={() => { logout(); onClose(); }}
+              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-bold text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+            >
+              <LogOut size={14}/> Logout
+            </button>
+          </div>
+        )}
+      </div>
     </>
   );
 }
@@ -284,111 +130,14 @@ export default function MobileFilterBar({ categories }: { categories: any[] }) {
 
 try {
   fs.writeFileSync(
-    path.join(process.cwd(), "components/MobileFilterBar.tsx"),
-    mobileFilterContent.trim(),
+    path.join(process.cwd(), "components/MobileMenu.tsx"),
+    mobileMenuContent.trim(),
   );
   console.log(
     colors.green +
-      "✔ components/MobileFilterBar.tsx translated to English." +
+      "✔ components/MobileMenu.tsx updated with relative positioning." +
       colors.reset,
   );
 } catch (e) {
-  console.error("Error updating MobileFilterBar:", e.message);
-}
-
-// ---------------------------------------------------------
-// 3. UPDATE components/AdCard.tsx (Ensure English Badges)
-// ---------------------------------------------------------
-const adCardContent = `"use client";
-import React from 'react';
-import Link from 'next/link';
-import Image from 'next/image';
-import { MapPin, Star, Zap } from 'lucide-react';
-import { formatPrice } from '@/lib/utils';
-import { useFavorites } from '@/context/FavoritesContext';
-
-export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: string }) {
-  const { isFavorite, toggleFavorite } = useFavorites();
-  const liked = isFavorite(ad.id);
-
-  const priceDisplay = formatPrice(ad.price, ad.currency);
-  const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=No+Image';
-
-  // Date formatting (English - US)
-  const dateStr = new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-  return (
-    <Link href={\`/ilan/\${ad.id}\`} className="group block h-full">
-      <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
-
-        {/* IMAGE */}
-        <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-slate-50">
-          <Image
-            src={imageUrl}
-            alt={ad.title}
-            fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
-
-          {/* BADGES (ENGLISH) */}
-          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-            {ad.is_urgent && (
-              <span className="bg-rose-500 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg">
-                <Zap size={10} fill="currentColor"/> URGENT
-              </span>
-            )}
-            {ad.is_vitrin && (
-              <span className="bg-yellow-400 text-black text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg">
-                FEATURED
-              </span>
-            )}
-          </div>
-
-          <button
-            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(ad.id); }}
-            className="absolute top-2 right-2 z-20 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-md text-slate-400 hover:text-rose-500 transition-colors"
-          >
-            <Star size={16} className={liked ? "fill-rose-500 text-rose-500" : ""} />
-          </button>
-        </div>
-
-        {/* CONTENT */}
-        <div className="p-2.5 md:p-4 flex-1 flex flex-col">
-          <h3 className="font-bold text-slate-800 text-[11px] md:text-sm leading-tight line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
-            {ad.title}
-          </h3>
-
-          <div className="mt-auto">
-            <div className="text-indigo-700 font-black text-[13px] md:text-lg tracking-tight">
-              {priceDisplay}
-            </div>
-            <div className="flex justify-between items-center mt-1 border-t border-slate-50 pt-1.5 text-[9px] md:text-[10px] text-slate-400">
-              <span className="flex items-center gap-0.5 truncate max-w-[70%] italic">
-                <MapPin size={10} /> {ad.city}
-              </span>
-              <span className="font-medium whitespace-nowrap">
-                {dateStr}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </Link>
-  );
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "components/AdCard.tsx"),
-    adCardContent.trim(),
-  );
-  console.log(
-    colors.green +
-      "✔ components/AdCard.tsx verified (English badges)." +
-      colors.reset,
-  );
-} catch (e) {
-  console.error("Error updating AdCard.tsx:", e.message);
+  console.error("Error updating MobileMenu:", e.message);
 }
