@@ -5,8 +5,8 @@ import { Package, Clock, CheckCircle } from 'lucide-react';
 
 export default function MyOrdersPage() {
   const orders = [
-    { id: 'SP-102938', date: '25.01.2025', amount: '350 TL', items: 'Ana Sayfa Vitrini', status: 'completed' },
-    { id: 'SP-102939', date: '10.01.2025', amount: '150 TL', items: 'Acil Acil', status: 'completed' },
+    { id: 'SP-102938', date: '25.01.2025', amount: '350 USD', items: 'Ana Sayfa Vitrini', status: 'completed' },
+    { id: 'SP-102939', date: '10.01.2025', amount: '150 USD', items: 'Acil Acil', status: 'completed' },
   ];
 
   return (

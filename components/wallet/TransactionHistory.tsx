@@ -5,7 +5,7 @@ export default function TransactionHistory({ transactions }: { transactions: any
   if (transactions.length === 0) {
     return (
         <div className="bg-white border border-gray-200 rounded-sm p-8 text-center text-gray-500 text-sm">
-            Henüz bir işlem hareketiniz bulunmuyor.
+            You have no transaction history yet.
         </div>
     );
   }
@@ -13,7 +13,7 @@ export default function TransactionHistory({ transactions }: { transactions: any
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm overflow-hidden">
         <div className="p-4 border-b border-gray-100 bg-gray-50">
-            <h3 className="font-bold text-gray-700 text-sm">Son İşlemler</h3>
+            <h3 className="font-bold text-gray-700 text-sm">Recent Transactions</h3>
         </div>
         <div className="divide-y divide-gray-100">
             {transactions.map((trx) => (
@@ -30,7 +30,7 @@ export default function TransactionHistory({ transactions }: { transactions: any
                         </div>
                     </div>
                     <div className={`text-sm font-bold ${trx.type === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
-                        {trx.type === 'deposit' ? '+' : '-'}{Number(trx.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} TL
+                        {trx.type === 'deposit' ? '+' : '-'}{Number(trx.amount).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
                     </div>
                 </div>
             ))}

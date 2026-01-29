@@ -29,7 +29,7 @@ export default function AdminPaymentsPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <p className="text-gray-500 text-xs font-bold uppercase mb-1">Toplam Ciro (Aylık)</p>
-            <p className="text-2xl font-bold text-blue-900">45.250 TL</p>
+            <p className="text-2xl font-bold text-blue-900">45.250 USD</p>
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <p className="text-gray-500 text-xs font-bold uppercase mb-1">Başarılı İşlem</p>
@@ -37,7 +37,7 @@ export default function AdminPaymentsPage() {
         </div>
         <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
             <p className="text-gray-500 text-xs font-bold uppercase mb-1">Bekleyen Ödeme</p>
-            <p className="text-2xl font-bold text-orange-500">1.200 TL</p>
+            <p className="text-2xl font-bold text-orange-500">1.200 USD</p>
         </div>
       </div>
 
@@ -66,7 +66,7 @@ export default function AdminPaymentsPage() {
                 <td className="p-4 font-mono text-xs text-gray-500">{payment.id}</td>
                 <td className="p-4 font-bold text-gray-800">{payment.user}</td>
                 <td className="p-4 text-gray-600">{payment.type}</td>
-                <td className="p-4 font-bold text-gray-800">{payment.amount} TL</td>
+                <td className="p-4 font-bold text-gray-800">{payment.amount} USD</td>
                 <td className="p-4 text-xs text-gray-500">{payment.date}</td>
                 <td className="p-4">
                   <span className={`px-2 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit ${

@@ -25,13 +25,13 @@ export default function AdminAdsPage() {
   };
 
   const handleApprove = async (id: number) => {
-    if (!confirm("Bu ilanı yayınlamak istiyor musunuz?")) return;
+    if (!confirm("Do you want to publish this ad??")) return;
     setProcessingId(id);
 
     try {
       const res = await approveAdAction(id);
       if (res.success) {
-        addToast("İlan başarıyla onaylandı.", "success");
+        addToast("Listing başarıyla onaylandı.", "success");
         // Listeyi yerel olarak güncelle (Tekrar fetch etmeden)
         setAds((prev) =>
           prev.map((ad) => (ad.id === id ? { ...ad, status: "yayinda" } : ad)),
@@ -48,7 +48,7 @@ export default function AdminAdsPage() {
   };
 
   const handleReject = async (id: number) => {
-    const reason = prompt("Reddetme sebebini yazınız:");
+    const reason = prompt("Rejectme sebebini yazınız:");
     if (reason === null) return;
 
     setProcessingId(id);
@@ -56,7 +56,7 @@ export default function AdminAdsPage() {
     try {
       const res = await rejectAdAction(id, reason);
       if (res.success) {
-        addToast("İlan reddedildi.", "info");
+        addToast("Listing reddedildi.", "info");
         setAds((prev) =>
           prev.map((ad) =>
             ad.id === id ? { ...ad, status: "reddedildi" } : ad,
@@ -81,7 +81,7 @@ export default function AdminAdsPage() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-800">İlan Yönetimi</h1>
+        <h1 className="text-2xl font-bold text-gray-800">Ad Management</h1>
         <div className="flex items-center gap-2 bg-white p-1 rounded-md border border-gray-200">
           <Filter size={16} className="text-gray-500 ml-2" />
           <select
@@ -89,10 +89,10 @@ export default function AdminAdsPage() {
             onChange={(e) => setFilter(e.target.value)}
             className="p-2 text-sm outline-none bg-transparent"
           >
-            <option value="all">Tüm İlanlar</option>
-            <option value="onay_bekliyor">Onay Bekleyenler</option>
-            <option value="yayinda">Yayındakiler</option>
-            <option value="reddedildi">Reddedilenler</option>
+            <option value="all">All Listings</option>
+            <option value="onay_bekliyor">Pending Approval</option>
+            <option value="yayinda">Active Listings</option>
+            <option value="reddedildi">Rejected</option>
             <option value="pasif">Pasif</option>
           </select>
         </div>
@@ -106,17 +106,17 @@ export default function AdminAdsPage() {
           </div>
         ) : filteredAds.length === 0 ? (
           <div className="p-10 text-center text-gray-500">
-            Bu kriterde ilan bulunamadı.
+            No ads found matching these criteria.
           </div>
         ) : (
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 uppercase text-xs">
               <tr>
-                <th className="px-6 py-3">İlan</th>
-                <th className="px-6 py-3">Satıcı</th>
-                <th className="px-6 py-3">Fiyat</th>
-                <th className="px-6 py-3">Durum</th>
-                <th className="px-6 py-3 text-right">İşlemler</th>
+                <th className="px-6 py-3">Listing</th>
+                <th className="px-6 py-3">Seller</th>
+                <th className="px-6 py-3">Price</th>
+                <th className="px-6 py-3">Status</th>
+                <th className="px-6 py-3 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -152,7 +152,7 @@ export default function AdminAdsPage() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="text-gray-900 font-medium">
-                      {ad.profiles?.full_name || "Bilinmiyor"}
+                      {ad.profiles?.full_name || "Unknown"}
                     </div>
                     <div className="text-xs text-gray-400 font-mono">
                       {ad.user_id.substring(0, 8)}...
@@ -172,10 +172,10 @@ export default function AdminAdsPage() {
                       }`}
                     >
                       {ad.status === "yayinda"
-                        ? "Yayında"
+                        ? "Active"
                         : ad.status === "onay_bekliyor"
-                          ? "Bekliyor"
-                          : "Reddedildi"}
+                          ? "Pending"
+                          : "Rejected"}
                     </span>
                   </td>
                   <td className="px-6 py-4 text-right">
@@ -184,7 +184,7 @@ export default function AdminAdsPage() {
                         href={`/ilan/${ad.id}`}
                         target="_blank"
                         className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors"
-                        title="Görüntüle"
+                        title="View"
                       >
                         <Eye size={18} />
                       </Link>
@@ -194,7 +194,7 @@ export default function AdminAdsPage() {
                             onClick={() => handleApprove(ad.id)}
                             disabled={processingId === ad.id}
                             className="p-1.5 text-green-600 hover:bg-green-50 rounded disabled:opacity-50 transition-colors"
-                            title="Onayla"
+                            title="Approve"
                           >
                             {processingId === ad.id ? (
                               <Loader2 size={18} className="animate-spin" />
@@ -206,7 +206,7 @@ export default function AdminAdsPage() {
                             onClick={() => handleReject(ad.id)}
                             disabled={processingId === ad.id}
                             className="p-1.5 text-red-600 hover:bg-red-50 rounded disabled:opacity-50 transition-colors"
-                            title="Reddet"
+                            title="Reject"
                           >
                             <X size={18} />
                           </button>

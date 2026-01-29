@@ -27,7 +27,7 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) { addToast('Yorum yapmak için giriş yapmalısınız.', 'error'); return; }
+    if (!user) { addToast('You must login to leave a review.', 'error'); return; }
 
     setSubmitting(true);
     const { error } = await addReviewClient(targetId, rating, comment, user.id);
@@ -35,7 +35,7 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
     if (error) {
       addToast(error.message, 'error');
     } else {
-      addToast('Yorumunuz eklendi!', 'success');
+      addToast('Reviewunuz eklendi!', 'success');
       setComment('');
       fetchReviews();
     }
@@ -50,18 +50,18 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm p-6 mt-6">
       <div className="flex items-center justify-between border-b border-gray-100 pb-4 mb-6">
-        <h2 className="text-lg font-bold text-[#333]">Satıcı Değerlendirmeleri</h2>
+        <h2 className="text-lg font-bold text-[#333]">Seller Reviews</h2>
         <div className="flex items-center gap-2">
            <Star className="fill-yellow-400 text-yellow-400" size={24} />
            <span className="text-2xl font-bold text-[#333]">{averageRating}</span>
-           <span className="text-sm text-gray-500">({reviews.length} Yorum)</span>
+           <span className="text-sm text-gray-500">({reviews.length} Review)</span>
         </div>
       </div>
 
-      {/* Yorum Yapma Formu */}
+      {/* Review Yapma Formu */}
       {user && user.id !== targetId && (
         <form onSubmit={handleSubmit} className="bg-gray-50 p-4 rounded-sm mb-8 border border-gray-100">
-          <h3 className="text-sm font-bold text-[#333] mb-3">Deneyimini Paylaş</h3>
+          <h3 className="text-sm font-bold text-[#333] mb-3">Share Your Experience</h3>
           <div className="flex gap-1 mb-3">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -77,7 +77,7 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
           <textarea
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Satıcı hakkında düşüncelerin..."
+            placeholder="Your thoughts about the seller..."
             className="w-full border border-gray-300 rounded-sm p-3 text-sm focus:outline-none focus:border-blue-500 resize-none h-24 mb-2"
             required
           />
@@ -86,17 +86,17 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
               disabled={submitting}
               className="bg-blue-600 text-white px-6 py-2 rounded-sm text-sm font-bold hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2 ml-auto"
             >
-              {submitting ? <Loader2 className="animate-spin" size={16}/> : <Send size={16}/>} Gönder
+              {submitting ? <Loader2 className="animate-spin" size={16}/> : <Send size={16}/>} Send
             </button>
           </div>
         </form>
       )}
 
-      {/* Yorum Listesi */}
+      {/* Review Listesi */}
       {loading ? (
         <div className="text-center py-10"><Loader2 className="animate-spin mx-auto text-blue-600"/></div>
       ) : reviews.length === 0 ? (
-        <div className="text-center py-8 text-gray-500 text-sm">Henüz değerlendirme yapılmamış. İlk yorumu sen yap!</div>
+        <div className="text-center py-8 text-gray-500 text-sm">No reviews yet. İlk yorumu sen yap!</div>
       ) : (
         <div className="space-y-6">
           {reviews.map((review) => (
@@ -107,7 +107,7 @@ export default function ReviewSection({ targetId }: { targetId: string }) {
                     {review.reviewer?.avatar_url ? <img src={review.reviewer.avatar_url} className="w-full h-full object-cover"/> : <User size={16} className="text-gray-500"/>}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-[#333]">{review.reviewer?.full_name || 'Kullanıcı'}</p>
+                    <p className="text-sm font-bold text-[#333]">{review.reviewer?.full_name || 'User'}</p>
                     <div className="flex gap-0.5">
                       {[...Array(5)].map((_, i) => (
                         <Star key={i} size={10} className={i < review.rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'} />

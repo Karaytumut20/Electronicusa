@@ -30,7 +30,7 @@ export default function WalletOverview({ balance, currency }: { balance: number,
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
            <p className="text-blue-200 text-sm font-medium flex items-center gap-2 mb-1">
-             <Wallet size={18}/> Mevcut Bakiye
+             <Wallet size={18}/> Current Balance
            </p>
            <h2 className="text-4xl font-bold tracking-tight">
              {balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} <span className="text-xl font-normal">{currency}</span>
@@ -43,7 +43,7 @@ export default function WalletOverview({ balance, currency }: { balance: number,
                  onClick={() => setIsAdding(true)}
                  className="bg-white/20 hover:bg-white/30 border border-white/40 text-white px-6 py-3 rounded-md font-bold transition-all flex items-center gap-2"
                >
-                  <Plus size={20}/> Bakiye Yükle
+                  <Plus size={20}/> Add Funds
                </button>
            ) : (
                <div className="bg-white p-2 rounded-md flex items-center gap-2 animate-in fade-in zoom-in-95 text-gray-800">

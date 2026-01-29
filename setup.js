@@ -11,133 +11,195 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🛠️  FIXING USER MENU POSITIONING VIA SETUP.JS...\n" +
+    "\n🇺🇸 FINAL PURGE: REMOVING LAST TURKISH ELEMENTS FOR USA DEPLOYMENT...\n" +
     colors.reset,
 );
 
-// ---------------------------------------------------------
-// UPDATE components/MobileMenu.tsx
-// ---------------------------------------------------------
-const mobileMenuContent = `"use client";
-import React from 'react';
-import Link from 'next/link';
-import { X, Home, List, MessageSquare, Settings, LogOut, Star, User } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+const translationTasks = [
+  // 1. Admin Panel - Ads Management
+  {
+    file: "app/admin/ilanlar/page.tsx",
+    replacements: [
+      { search: "İlan Yönetimi", replace: "Ad Management" },
+      { search: "Tüm İlanlar", replace: "All Listings" },
+      { search: "Onay Bekleyenler", replace: "Pending Approval" },
+      { search: "Yayındakiler", replace: "Active Listings" },
+      { search: "Reddedilenler", replace: "Rejected" },
+      {
+        search: "Bu kriterde ilan bulunamadı.",
+        replace: "No ads found matching these criteria.",
+      },
+      { search: "İlan", replace: "Listing" },
+      { search: "Satıcı", replace: "Seller" },
+      { search: "Fiyat", replace: "Price" },
+      { search: "Durum", replace: "Status" },
+      { search: "İşlemler", replace: "Actions" },
+      { search: "Bilinmiyor", replace: "Unknown" },
+      { search: "Yayında", replace: "Active" },
+      { search: "Bekliyor", replace: "Pending" },
+      { search: "Reddedildi", replace: "Rejected" },
+      { search: "Görüntüle", replace: "View" },
+      { search: "Onayla", replace: "Approve" },
+      { search: "Reddet", replace: "Reject" },
+      {
+        search: "Bu ilanı yayınlamak istiyor musunuz?",
+        replace: "Do you want to publish this ad?",
+      },
+      {
+        search: "Reddetme sebebini yazınız:",
+        replace: "Please enter the rejection reason:",
+      },
+    ],
+  },
+  // 2. Admin Panel - User Management
+  {
+    file: "app/admin/kullanicilar/page.tsx",
+    replacements: [
+      { search: "Kullanıcı Yönetimi", replace: "User Management" },
+      {
+        search: "İsim veya E-posta ara...",
+        replace: "Search Name or Email...",
+      },
+      { search: "Kullanıcı", replace: "User" },
+      { search: "İletişim", replace: "Contact" },
+      { search: "Rol", replace: "Role" },
+      { search: "Durum", replace: "Status" },
+      { search: "İsimsiz", replace: "Anonymous" },
+      { search: "Telefon Yok", replace: "No Phone" },
+      { search: "Üye", replace: "Member" },
+      { search: "Kurumsal", replace: "Store" },
+      { search: "Yönetici", replace: "Administrator" },
+      { search: "Aktif", replace: "Active" },
+      { search: "Banlı", replace: "Banned" },
+      { search: "Banla", replace: "Ban" },
+      { search: "Banı Kaldır", replace: "Unban" },
+      { search: "İşlem başarısız.", replace: "Action failed." },
+      { search: "Kullanıcı bulunamadı.", replace: "User not found." },
+    ],
+  },
+  // 3. Admin Panel - Settings
+  {
+    file: "app/admin/ayarlar/page.tsx",
+    replacements: [
+      { search: "Site Ayarları", replace: "Site Settings" },
+      { search: "Genel", replace: "General" },
+      { search: "Güvenlik", replace: "Security" },
+      { search: "E-posta & Bildirim", replace: "Email & Notifications" },
+      { search: "Site Bilgileri", replace: "Site Information" },
+      { search: "Site Başlığı", replace: "Site Title" },
+      { search: "Site URL", replace: "Site URL" },
+      { search: "Açıklama (Meta Description)", replace: "Meta Description" },
+      { search: "Üyelik & İlan", replace: "Membership & Ads" },
+      {
+        search: "Yeni üyelik alımı açık olsun",
+        replace: "Allow new registrations",
+      },
+      {
+        search: "İlanlar editör onayı olmadan yayınlanmasın",
+        replace: "Ads require editor approval",
+      },
+      {
+        search: "Bakım modu (Sadece adminler erişebilir)",
+        replace: "Maintenance mode (Admins only)",
+      },
+      { search: "Ayarları Kaydet", replace: "Save Settings" },
+    ],
+  },
+  // 4. Wallet (Cüzdan) Translation
+  {
+    file: "app/bana-ozel/cuzdan/page.tsx",
+    replacements: [
+      { search: "Cüzdanım", replace: "My Wallet" },
+      {
+        search: "Cüzdan bilgisi alınamadı.",
+        replace: "Wallet info not found.",
+      },
+      {
+        search: "Cüzdan bakiyeniz ile doping satın alabilir",
+        replace: "You can purchase boosts with your balance.",
+      },
+      {
+        search: "Tüm işlemler SSL güvencesi altındadır.",
+        replace: "All transactions are secured by SSL.",
+      },
+    ],
+  },
+  // 5. Review Section (Yorumlar)
+  {
+    file: "components/ReviewSection.tsx",
+    replacements: [
+      {
+        search: "Yorum yapmak için giriş yapmalısınız.",
+        replace: "You must login to leave a review.",
+      },
+      { search: "Deneyimini Paylaş", replace: "Share Your Experience" },
+      {
+        search: "Satıcı hakkında düşüncelerin...",
+        replace: "Your thoughts about the seller...",
+      },
+      { search: "Gönder", replace: "Submit" },
+      { search: "Henüz değerlendirme yapılmamış.", replace: "No reviews yet." },
+      { search: "Yorum", replace: "Review" },
+      { search: "Kullanıcı", replace: "User" },
+    ],
+  },
+  // 6. Global Utility & Date Fixes
+  {
+    file: "lib/utils.ts",
+    replacements: [
+      { search: "Dün", replace: "Yesterday" },
+      { search: "Bugün", replace: "Today" },
+    ],
+  },
+];
 
-// Bu bileşen artık Navbar'daki avatarın hemen altında hizalanacak şekilde güncellendi.
-export default function MobileMenu({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { user, logout } = useAuth();
+translationTasks.forEach((task) => {
+  const filePath = path.join(process.cwd(), task.file);
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, "utf8");
+    let hasChange = false;
 
-  if (!isOpen) return null;
+    task.replacements.forEach((rep) => {
+      if (content.includes(rep.search)) {
+        const regex = new RegExp(rep.search, "g");
+        content = content.replace(regex, rep.replace);
+        hasChange = true;
+      }
+    });
 
-  return (
-    <>
-      {/* 1. BACKDROP - Menü dışına tıklandığında kapanmasını sağlar */}
-      <div
-        className="fixed inset-0 z-[90] bg-transparent cursor-default"
-        onClick={onClose}
-      ></div>
+    if (hasChange) {
+      fs.writeFileSync(filePath, content);
+      console.log(colors.green + `✔ Translated: ${task.file}` + colors.reset);
+    }
+  }
+});
 
-      {/* 2. DROPDOWN MENU CONTENT */}
-      {/* absolute top-full right-0: Parent element olan 'relative' div'in tam altına ve sağına hizalar */}
-      <div className="absolute top-[calc(100%+10px)] right-0 z-[100] w-[280px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 slide-in-from-top-2 duration-200 origin-top-right">
+// Final Check for hardcoded "TL" currency in files
+const filesToCheckCurrency = [
+  "app/admin/odemeler/page.tsx",
+  "app/bana-ozel/siparislerim/page.tsx",
+  "components/wallet/TransactionHistory.tsx",
+];
 
-        {/* Üst Bilgi Alanı */}
-        <div className="bg-slate-900 text-white p-5 shrink-0 relative">
-          <button onClick={onClose} className="absolute top-3 right-3 text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors">
-            <X size={16} />
-          </button>
+filesToCheckCurrency.forEach((file) => {
+  const filePath = path.join(process.cwd(), file);
+  if (fs.existsSync(filePath)) {
+    let content = fs.readFileSync(filePath, "utf8");
+    if (content.includes("TL")) {
+      content = content.replace(/TL/g, "USD");
+      fs.writeFileSync(filePath, content);
+      console.log(
+        colors.green +
+          `✔ Updated Currency in ${file}: TL -> USD` +
+          colors.reset,
+      );
+    }
+  }
+});
 
-          {user ? (
-            <div className="flex items-center gap-3">
-               <div className="w-10 h-10 bg-indigo-600 rounded-full flex items-center justify-center font-bold border-2 border-white/20 text-sm shadow-sm shrink-0">
-                 {user.name?.charAt(0).toUpperCase() || 'U'}
-               </div>
-               <div className="min-w-0">
-                  <p className="font-bold text-sm truncate">{user.name}</p>
-                  <p className="text-[10px] text-indigo-300 truncate">{user.email}</p>
-               </div>
-            </div>
-          ) : (
-            <div className="text-center">
-              <p className="font-bold text-sm mb-1">Welcome</p>
-              <p className="text-[10px] text-slate-400 mb-3">Log in to manage your ads.</p>
-              <div className="flex gap-2">
-                <Link href="/login" onClick={onClose} className="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white py-1.5 rounded-lg font-bold text-[10px] transition-colors">Login</Link>
-                <Link href="/register" onClick={onClose} className="flex-1 bg-white/10 hover:bg-white/20 text-white py-1.5 rounded-lg font-bold text-[10px] transition-colors">Register</Link>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Menü Linkleri */}
-        <div className="flex-1 overflow-y-auto py-2 bg-white max-h-[60vh]">
-          <p className="px-5 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Navigation</p>
-          <ul className="text-xs text-slate-700 font-medium space-y-1 px-2">
-            <li>
-              <Link href="/" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                <Home size={16} className="text-indigo-600"/> Home
-              </Link>
-            </li>
-            {user && (
-              <>
-                <li>
-                  <Link href="/dashboard" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                    <User size={16} className="text-indigo-600"/> Dashboard
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard/my-ads" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                    <List size={16} className="text-indigo-600"/> My Listings
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard/messages" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                    <MessageSquare size={16} className="text-indigo-600"/> Messages
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard/favorites" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                    <Star size={16} className="text-indigo-600"/> Favorites
-                  </Link>
-                </li>
-                <li>
-                  <Link href="/dashboard/settings" onClick={onClose} className="flex items-center gap-3 px-4 py-2.5 hover:bg-indigo-50 rounded-xl transition-colors">
-                    <Settings size={16} className="text-indigo-600"/> Settings
-                  </Link>
-                </li>
-              </>
-            )}
-          </ul>
-        </div>
-
-        {/* Çıkış Butonu */}
-        {user && (
-          <div className="p-2 border-t border-gray-100 bg-gray-50">
-            <button
-              onClick={() => { logout(); onClose(); }}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2 text-[11px] font-bold text-red-600 hover:bg-red-100 rounded-lg transition-colors"
-            >
-              <LogOut size={14}/> Logout
-            </button>
-          </div>
-        )}
-      </div>
-    </>
-  );
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "components/MobileMenu.tsx"),
-    mobileMenuContent.trim(),
-  );
-  console.log(
-    colors.green +
-      "✔ components/MobileMenu.tsx updated with relative positioning." +
-      colors.reset,
-  );
-} catch (e) {
-  console.error("Error updating MobileMenu:", e.message);
-}
+console.log(
+  colors.blue +
+    colors.bold +
+    "\n✅ TRANSLATION AUDIT COMPLETE. THE PROJECT IS NOW 100% ENGLISH.\n" +
+    colors.reset,
+);

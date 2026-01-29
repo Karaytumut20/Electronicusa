@@ -54,7 +54,7 @@ export default function DashboardPage() {
   return (
     <div className="space-y-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Hoş Geldiniz, {user.name}</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Welcome, {user.name}</h1>
           <p className="text-slate-500 mt-1">İlanlarınızın performans özeti ve hesap durumunuz.</p>
         </div>
 
@@ -67,7 +67,7 @@ export default function DashboardPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <h3 className="font-bold text-slate-800 mb-6">İlan Durum Dağılımı</h3>
+                <h3 className="font-bold text-slate-800 mb-6">Ad Status Distribution</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -83,7 +83,7 @@ export default function DashboardPage() {
             </div>
 
             <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-                <h3 className="font-bold text-slate-800 mb-6">En Çok Görüntülenenler</h3>
+                <h3 className="font-bold text-slate-800 mb-6">Most Viewed</h3>
                 <div className="h-[300px]">
                   <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={priceData}>

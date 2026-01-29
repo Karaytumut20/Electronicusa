@@ -167,12 +167,12 @@ function MessagesContent() {
       <div className={`w-full md:w-[350px] border-r border-gray-200 flex flex-col bg-white ${activeConvId ? "hidden md:flex" : "flex"}`}>
 
         <div className="p-4 border-b border-gray-100">
-            <h2 className="font-bold text-xl text-gray-800 mb-4 px-1">Mesajlar</h2>
+            <h2 className="font-bold text-xl text-gray-800 mb-4 px-1">Messages</h2>
             <div className="relative">
                 <Search size={16} className="absolute left-3 top-3 text-gray-400" />
                 <input
                     type="text"
-                    placeholder="Sohbet ara..."
+                    placeholder="Search chat..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full bg-gray-100 pl-10 pr-4 py-2.5 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-gray-700"
@@ -278,7 +278,7 @@ function MessagesContent() {
 
                     <div className="flex justify-center mb-4">
                         <span className="bg-gray-200/80 text-gray-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-sm">
-                            Sohbet Başlangıcı
+                            Start of Conversation
                         </span>
                     </div>
 
@@ -323,7 +323,7 @@ function MessagesContent() {
                         value={inputText}
                         onChange={e => setInputText(e.target.value)}
                         className="flex-1 bg-gray-100 border-none rounded-full px-5 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all text-sm text-gray-800"
-                        placeholder="Bir mesaj yazın..."
+                        placeholder="Type a message..."
                     />
                     <button
                         type="submit"

@@ -11,7 +11,7 @@ export default function ShareModal() {
 
   const handleCopy = () => {
     navigator.clipboard.writeText(url || window.location.href);
-    addToast('Bağlantı kopyalandı!', 'success');
+    addToast('Link copied!', 'success');
     closeModal();
   };
 
@@ -21,7 +21,7 @@ export default function ShareModal() {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-sm relative z-10 animate-in fade-in zoom-in-95 duration-200">
 
         <div className="flex justify-between items-center p-4 border-b border-gray-100">
-          <h3 className="font-bold text-gray-800">İlanı Paylaş</h3>
+          <h3 className="font-bold text-gray-800">Share Listing</h3>
           <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
             <X size={20} />
           </button>

@@ -36,14 +36,14 @@ export default function ReportModal() {
       <div className="bg-white rounded-md w-full max-w-md shadow-xl animate-in fade-in zoom-in-95 duration-200">
         <div className="flex justify-between items-center p-4 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 flex items-center gap-2">
-            <AlertTriangle className="text-red-500" size={20} /> İlanı Şikayet Et
+            <AlertTriangle className="text-red-500" size={20} /> Report Listing
           </h3>
           <button onClick={closeReport} className="text-gray-400 hover:text-gray-600"><X size={20} /></button>
         </div>
 
         <form onSubmit={handleSubmit} className="p-4 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-700 mb-1">Şikayet Nedeni</label>
+            <label className="block text-xs font-bold text-gray-700 mb-1">Reason for Report</label>
             <select
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}

@@ -1,7 +1,7 @@
 
 "use client";
 import React, { useState, useEffect } from 'react';
-import { getAllUsersClient, updateUserStatusClient, updateUserRoleClient } from '@/lib/services';
+import { getAllUsersClient, updateUserStatusClient, updateUserRoleeClient } from '@/lib/services';
 import { useToast } from '@/context/ToastContext';
 import { Search, User, Shield, Ban, CheckCircle, Loader2, MoreHorizontal } from 'lucide-react';
 
@@ -24,25 +24,25 @@ export default function AdminUsersPage() {
 
   const handleStatusChange = async (userId: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'banned' : 'active';
-    const actionName = newStatus === 'active' ? 'Ban Kaldırma' : 'Banlama';
+    const actionName = newStatus === 'active' ? 'Ban Kaldırma' : 'Banma';
 
     if(!confirm(`Bu kullanıcıya ${actionName} işlemi uygulamak istediğinize emin misiniz?`)) return;
 
     const { error } = await updateUserStatusClient(userId, newStatus);
     if (error) {
-      addToast('İşlem başarısız.', 'error');
+      addToast('Action failed.', 'error');
     } else {
-      addToast(`Kullanıcı durumu: ${newStatus}`, 'success');
+      addToast(`User durumu: ${newStatus}`, 'success');
       // Listeyi yerel olarak güncelle (Tekrar fetch etmeye gerek yok)
       setUsers(prev => prev.map(u => u.id === userId ? { ...u, status: newStatus } : u));
     }
   };
 
-  const handleRoleChange = async (userId: string, newRole: string) => {
-    const { error } = await updateUserRoleClient(userId, newRole);
+  const handleRoleeChange = async (userId: string, newRolee: string) => {
+    const { error } = await updateUserRoleeClient(userId, newRolee);
     if (!error) {
-      addToast('Rol güncellendi.', 'success');
-      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRole } : u));
+      addToast('Role güncellendi.', 'success');
+      setUsers(prev => prev.map(u => u.id === userId ? { ...u, role: newRolee } : u));
     }
   };
 
@@ -54,11 +54,11 @@ export default function AdminUsersPage() {
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-800">Kullanıcı Yönetimi</h1>
+        <h1 className="text-2xl font-bold text-gray-800">User Management</h1>
         <div className="relative">
           <input
             type="text"
-            placeholder="İsim veya E-posta ara..."
+            placeholder="Search Name or Email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-9 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500 w-64 text-sm"
@@ -74,10 +74,10 @@ export default function AdminUsersPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b text-gray-500">
               <tr>
-                <th className="p-4 font-medium">Kullanıcı</th>
-                <th className="p-4 font-medium">İletişim</th>
-                <th className="p-4 font-medium">Rol</th>
-                <th className="p-4 font-medium">Durum</th>
+                <th className="p-4 font-medium">User</th>
+                <th className="p-4 font-medium">Contact</th>
+                <th className="p-4 font-medium">Role</th>
+                <th className="p-4 font-medium">Status</th>
                 <th className="p-4 font-medium text-right">İşlemler</th>
               </tr>
             </thead>
@@ -90,24 +90,24 @@ export default function AdminUsersPage() {
                         {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full rounded-full object-cover"/> : (user.full_name?.[0] || 'U')}
                       </div>
                       <div>
-                        <p className="font-bold text-gray-800">{user.full_name || 'İsimsiz'}</p>
+                        <p className="font-bold text-gray-800">{user.full_name || 'Anonymous'}</p>
                         <p className="text-xs text-gray-400">ID: {user.id.slice(0, 8)}...</p>
                       </div>
                     </div>
                   </td>
                   <td className="p-4">
                     <p className="text-gray-700">{user.email}</p>
-                    <p className="text-xs text-gray-500">{user.phone || 'Telefon Yok'}</p>
+                    <p className="text-xs text-gray-500">{user.phone || 'No Phone'}</p>
                   </td>
                   <td className="p-4">
                     <select
                       value={user.role || 'user'}
-                      onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                      onChange={(e) => handleRoleeChange(user.id, e.target.value)}
                       className="bg-white border border-gray-200 text-xs rounded p-1 outline-none focus:border-blue-500 cursor-pointer"
                     >
-                      <option value="user">Üye</option>
-                      <option value="store">Kurumsal</option>
-                      <option value="admin">Yönetici</option>
+                      <option value="user">Member</option>
+                      <option value="store">Store</option>
+                      <option value="admin">Administrator</option>
                     </select>
                   </td>
                   <td className="p-4">
@@ -115,7 +115,7 @@ export default function AdminUsersPage() {
                       user.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                     }`}>
                       {user.status === 'active' ? <CheckCircle size={12}/> : <Ban size={12}/>}
-                      {user.status === 'active' ? 'Aktif' : 'Banlı'}
+                      {user.status === 'active' ? 'Active' : 'Banned'}
                     </span>
                   </td>
                   <td className="p-4 text-right">
@@ -127,13 +127,13 @@ export default function AdminUsersPage() {
                           : 'border-green-200 text-green-600 hover:bg-green-50'
                       }`}
                     >
-                      {user.status === 'active' ? 'Banla' : 'Banı Kaldır'}
+                      {user.status === 'active' ? 'Ban' : 'Unban'}
                     </button>
                   </td>
                 </tr>
               ))}
               {filteredUsers.length === 0 && (
-                <tr><td colSpan={5} className="p-8 text-center text-gray-500">Kullanıcı bulunamadı.</td></tr>
+                <tr><td colSpan={5} className="p-8 text-center text-gray-500">User bulunamadı.</td></tr>
               )}
             </tbody>
           </table>
