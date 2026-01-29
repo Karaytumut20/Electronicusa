@@ -11,7 +11,7 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 IMPLEMENTING TABLE VIEW FOR SEARCH PAGE...\n" +
+    "\n🚀 SHORTENING TITLE WIDTH IN TABLE VIEW...\n" +
     colors.reset,
 );
 
@@ -23,9 +23,9 @@ import Pagination from '@/components/Pagination';
 import ViewToggle from '@/components/ViewToggle';
 import SmartCategoryGrid from '@/components/SmartCategoryGrid';
 import MobileFilterBar from '@/components/MobileFilterBar';
-import { SearchX, ArrowLeft, ArrowRight, MapPin, Calendar } from 'lucide-react';
+import { SearchX, ArrowLeft, MapPin } from 'lucide-react';
 import Link from 'next/link';
-import { formatPrice } from '@/lib/utils'; // Price formatting imported
+import { formatPrice } from '@/lib/utils';
 
 // Helper to find category in tree
 function findCategory(categories: any[], slug: string): any {
@@ -90,11 +90,11 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center animate-in fade-in">
                   <div>
                      <h1 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        {selectedCategory ? selectedCategory.title : 'Search Results'}
+                        {selectedCategory ? selectedCategory.title : 'Arama Sonuçları'}
                         {searchParams.brand && <span className="text-indigo-600">/ {searchParams.brand}</span>}
                         {searchParams.q && <span className="text-indigo-600">/ "{searchParams.q}"</span>}
                      </h1>
-                     <p className="text-xs text-slate-500 font-medium mt-1">{count} listings found</p>
+                     <p className="text-xs text-slate-500 font-medium mt-1">{count} ilan bulundu</p>
                   </div>
                   <ViewToggle currentView={viewMode} />
                </div>
@@ -104,10 +104,10 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <SearchX size={40} className="text-slate-400"/>
                    </div>
-                   <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
-                   <p className="text-slate-500 max-w-md mx-auto text-sm">We couldn't find any listings matching your criteria.</p>
+                   <h3 className="text-xl font-bold text-slate-800 mb-2">Sonuç Bulunamadı</h3>
+                   <p className="text-slate-500 max-w-md mx-auto text-sm">Aradığınız kriterlere uygun ilan bulunamadı.</p>
                    <Link href="/search" className="mt-6 inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline bg-indigo-50 px-6 py-3 rounded-lg transition-colors">
-                        <ArrowLeft size={16}/> Clear Filters
+                        <ArrowLeft size={16}/> Filtreleri Temizle
                    </Link>
                  </div>
                ) : (
@@ -122,66 +122,62 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                    {/* --- LIST VIEW --- */}
                    {viewMode === 'list' && (
                      <div className="space-y-4">
-                       {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="list" />)}
+                       {ads.map((ad: any) => (
+                           <div key={ad.id} className="h-32">
+                               <AdCard ad={ad} viewMode="list" />
+                           </div>
+                       ))}
                      </div>
                    )}
 
-                   {/* --- TABLE VIEW (NEW) --- */}
+                   {/* --- TABLE VIEW (OPTIMIZED) --- */}
                    {viewMode === 'table' && (
                      <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
                        <div className="overflow-x-auto">
                          <table className="w-full text-left text-sm whitespace-nowrap">
-                           <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
+                           <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 font-bold text-xs uppercase">
                              <tr>
-                               <th className="px-6 py-4 w-24">Image</th>
-                               <th className="px-6 py-4">Title</th>
-                               <th className="px-6 py-4">Price</th>
-                               <th className="px-6 py-4">Location</th>
-                               <th className="px-6 py-4">Date</th>
-                               <th className="px-6 py-4 text-right">Action</th>
+                               <th className="px-4 py-3 w-16">Resim</th>
+                               <th className="px-4 py-3">İlan Detayları</th>
+                               <th className="px-4 py-3 text-right">Fiyat</th>
                              </tr>
                            </thead>
                            <tbody className="divide-y divide-gray-100">
                              {ads.map((ad: any) => (
-                               <tr key={ad.id} className="hover:bg-indigo-50/50 transition-colors group">
-                                 <td className="px-6 py-3">
-                                   <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
+                               <tr key={ad.id} className="hover:bg-slate-50 transition-colors group relative">
+                                 {/* Resim */}
+                                 <td className="px-4 py-2">
+                                   <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
                                         src={ad.image || 'https://via.placeholder.com/100'}
                                         alt={ad.title}
                                         className="w-full h-full object-cover"
                                       />
+                                      <Link href={\`/ilan/\${ad.id}\`} className="absolute inset-0" />
                                    </div>
                                  </td>
-                                 <td className="px-6 py-3">
-                                   <Link href={\`/ilan/\${ad.id}\`} className="font-bold text-slate-800 hover:text-indigo-600 block text-base mb-1">
+
+                                 {/* Başlık, Konum ve Tarih */}
+                                 <td className="px-4 py-2">
+                                   {/* MAX WIDTH AZALTILDI: max-w-[220px] */}
+                                   <Link href={\`/ilan/\${ad.id}\`} className="font-bold text-slate-800 hover:text-indigo-600 block text-sm truncate max-w-[220px] mb-1" title={ad.title}>
                                      {ad.title}
                                    </Link>
-                                   <span className="text-xs text-slate-400">{ad.brand} {ad.model}</span>
+                                   <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                                      <span className="flex items-center gap-1">
+                                        <MapPin size={12} className="text-slate-400"/> {ad.city} / {ad.district}
+                                      </span>
+                                      <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                      <span>
+                                        {new Date(ad.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                      </span>
+                                   </div>
                                  </td>
-                                 <td className="px-6 py-3 font-bold text-indigo-600 text-base">
+
+                                 {/* Fiyat */}
+                                 <td className="px-4 py-2 font-bold text-indigo-700 text-sm text-right">
                                    {formatPrice(ad.price, ad.currency)}
-                                 </td>
-                                 <td className="px-6 py-3 text-gray-600">
-                                   <div className="flex items-center gap-1.5">
-                                      <MapPin size={14} className="text-gray-400"/>
-                                      {ad.city}, {ad.district}
-                                   </div>
-                                 </td>
-                                 <td className="px-6 py-3 text-gray-500">
-                                   <div className="flex items-center gap-1.5 text-xs">
-                                      <Calendar size={14} className="text-gray-400"/>
-                                      {new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                                   </div>
-                                 </td>
-                                 <td className="px-6 py-3 text-right">
-                                   <Link
-                                     href={\`/ilan/\${ad.id}\`}
-                                     className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
-                                   >
-                                     <ArrowRight size={16} />
-                                   </Link>
                                  </td>
                                </tr>
                              ))}
@@ -210,9 +206,11 @@ try {
   fs.writeFileSync(filePath, searchPageContent.trim());
   console.log(
     colors.green +
-      "✔ app/search/page.tsx updated with TABLE view." +
+      "✔ app/search/page.tsx updated (Title width shortened)." +
       colors.reset,
   );
 } catch (err) {
-  console.error(colors.bold + "✘ Error: " + err.message + colors.reset);
+  console.error(
+    colors.bold + "✘ Error updating search page: " + err.message + colors.reset,
+  );
 }
