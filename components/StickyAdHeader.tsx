@@ -1,4 +1,3 @@
-
 "use client";
 import React, { useState, useEffect } from 'react';
 import { Phone } from 'lucide-react';
@@ -6,15 +5,14 @@ import { Phone } from 'lucide-react';
 type Props = {
   title: string;
   price: string;
-  currency: string;
+  currency?: string; // Optional/Ignored
 };
 
-export default function StickyAdHeader({ title, price, currency }: Props) {
+export default function StickyAdHeader({ title, price }: Props) {
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
-      // 400px aşağı inince göster
       if (window.scrollY > 400) {
         setIsVisible(true);
       } else {
@@ -34,14 +32,14 @@ export default function StickyAdHeader({ title, price, currency }: Props) {
 
         <div className="flex-1 min-w-0 pr-8">
           <h2 className="text-[#333] font-bold text-sm truncate">{title}</h2>
-          <p className="text-xs text-gray-500">İlan No: 1029381</p>
+          <p className="text-xs text-gray-500">Ad No: 1029381</p>
         </div>
 
         <div className="flex items-center gap-6 shrink-0">
-          <span className="text-xl font-bold text-blue-900">{price} {currency}</span>
+          <span className="text-xl font-bold text-blue-900">{price}</span>
 
           <button className="bg-blue-700 text-white px-6 py-2 rounded-sm font-bold text-sm hover:bg-blue-800 transition-colors flex items-center gap-2">
-            <Phone size={16} /> Satıcıyı Ara
+            <Phone size={16} /> Contact Seller
           </button>
         </div>
 

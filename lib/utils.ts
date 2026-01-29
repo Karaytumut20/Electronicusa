@@ -6,12 +6,13 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export function formatPrice(price: number | string | null | undefined, currency: string = 'USD') {
-  if (price === null || price === undefined) return '0 ' + currency;
+  if (price === null || price === undefined) return '$0';
   const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  return new Intl.NumberFormat('en-US', {
+  // Always format as USD with '$' prefix, ignoring the currency argument string suffix
+  return '$' + new Intl.NumberFormat('en-US', {
     style: 'decimal',
     maximumFractionDigits: 0,
-  }).format(numPrice) + ' ' + currency;
+  }).format(numPrice);
 }
 
 export function formatDate(dateString: string | null | undefined) {

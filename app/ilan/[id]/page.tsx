@@ -16,6 +16,7 @@ import ViewTracker from '@/components/ViewTracker';
 import LiveVisitorCount from '@/components/LiveVisitorCount';
 import Badge from '@/components/ui/Badge';
 import { Eye, MapPin, Calendar, Tag, AlertTriangle, Clock } from 'lucide-react';
+import { formatPrice } from '@/lib/utils'; // Import formatPrice
 
 export default async function AdDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -24,7 +25,6 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
   if (!ad) return notFound();
 
   // --- GÜVENLİK KONTROLÜ BAŞLANGIÇ ---
-  // İlan yayında değilse (onay bekliyor, pasif vb.), sadece ilan sahibi veya admin görebilir.
   if (ad.status !== 'yayinda') {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -33,19 +33,17 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
       let isAdmin = false;
 
       if (user) {
-          // Kullanıcı admin mi kontrol et
           const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
           if (profile?.role === 'admin') isAdmin = true;
       }
 
-      // Eğer ne ilan sahibi ne de admin ise, sayfa bulunamadı (404) döndür.
       if (!isOwner && !isAdmin) {
           return notFound();
       }
   }
   // --- GÜVENLİK KONTROLÜ BİTİŞ ---
 
-  const formattedPrice = ad.price?.toLocaleString('en-US');
+  const formattedPrice = formatPrice(ad.price, ad.currency);
   const location = `${ad.city || ''}, ${ad.district || ''}`;
   const sellerInfo = ad.profiles || { full_name: 'Unknown User', phone: '', email: '', show_phone: false };
   const adImages = ad.images && ad.images.length > 0 ? ad.images : (ad.image ? [ad.image] : []);
@@ -69,12 +67,11 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
   return (
     <div className="pb-20 relative font-sans bg-[#F8FAFC] min-h-screen">
       <ViewTracker adId={ad.id} />
-      <StickyAdHeader title={ad.title} price={formattedPrice} currency={ad.currency} />
+      <StickyAdHeader title={ad.title} price={formattedPrice} />
 
       <div className="container mx-auto px-4 py-6 max-w-7xl">
         <Breadcrumb items={breadcrumbItems} />
 
-        {/* Uyarı Barı: İlan Sahibi veya Admin için, eğer ilan yayında değilse bilgi ver */}
         {ad.status !== 'yayinda' && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
                 <div className="flex items-center">
@@ -118,7 +115,7 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-center">
                <div>
                  <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Price</p>
-                 <p className="text-4xl font-extrabold text-indigo-700 tracking-tight">{formattedPrice} <span className="text-2xl text-slate-400 font-normal">{ad.currency}</span></p>
+                 <p className="text-4xl font-extrabold text-indigo-700 tracking-tight">{formattedPrice}</p>
                </div>
                <div className="hidden md:block">
                  <AdActionButtons id={ad.id} title={ad.title} image={ad.image} sellerName={sellerInfo.full_name} />
@@ -159,7 +156,7 @@ export default async function AdDetailPage({ params }: { params: Promise<{ id: s
           </div>
         </div>
       </div>
-      <MobileAdActionBar price={`${formattedPrice} ${ad.currency}`} phone={sellerInfo.show_phone ? sellerInfo.phone : undefined} />
+      <MobileAdActionBar price={formattedPrice} phone={sellerInfo.show_phone ? sellerInfo.phone : undefined} />
     </div>
   );
 }
