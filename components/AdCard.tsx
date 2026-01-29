@@ -13,12 +13,8 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
   const priceDisplay = formatPrice(ad.price, ad.currency);
   const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=No+Image';
 
-  // Date formatting (English)
+  // Date formatting (English - US)
   const dateStr = new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-
-  // Grid ve List modunda aynı kart yapısını kullan (Eski hal)
-  // İstenirse 'list' modu için sadece genişlik/flex ayarı yapılabilir ama
-  // şimdilik 'eski haline' döndürüyoruz.
 
   return (
     <Link href={`/ilan/${ad.id}`} className="group block h-full">
@@ -34,7 +30,7 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
             sizes="(max-width: 768px) 50vw, 25vw"
           />
 
-          {/* BADGES */}
+          {/* BADGES (ENGLISH) */}
           <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
             {ad.is_urgent && (
               <span className="bg-rose-500 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg">

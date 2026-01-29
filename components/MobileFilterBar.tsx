@@ -15,7 +15,7 @@ export default function MobileFilterBar({ categories }: { categories: any[] }) {
           className="w-full bg-white border border-gray-200 text-slate-700 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
         >
           <Filter size={18} className="text-indigo-600" />
-          Filtrele & Sırala
+          Filter & Sort
         </button>
       </div>
 
@@ -26,7 +26,7 @@ export default function MobileFilterBar({ categories }: { categories: any[] }) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white shrink-0">
             <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-              <Filter size={20} className="text-indigo-600"/> Filtreler
+              <Filter size={20} className="text-indigo-600"/> Filters
             </h2>
             <button
               onClick={() => setIsOpen(false)}
@@ -50,7 +50,7 @@ export default function MobileFilterBar({ categories }: { categories: any[] }) {
               onClick={() => setIsOpen(false)}
               className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors"
             >
-              Sonuçları Göster
+              Show Results
             </button>
           </div>
         </div>

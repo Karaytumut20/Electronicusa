@@ -73,11 +73,11 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center animate-in fade-in">
                   <div>
                      <h1 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        {selectedCategory ? selectedCategory.title : 'Arama Sonuçları'}
+                        {selectedCategory ? selectedCategory.title : 'Search Results'}
                         {searchParams.brand && <span className="text-indigo-600">/ {searchParams.brand}</span>}
                         {searchParams.q && <span className="text-indigo-600">/ "{searchParams.q}"</span>}
                      </h1>
-                     <p className="text-xs text-slate-500 font-medium mt-1">{count} ilan bulundu</p>
+                     <p className="text-xs text-slate-500 font-medium mt-1">{count} listings found</p>
                   </div>
                   <ViewToggle currentView={viewMode} />
                </div>
@@ -87,10 +87,10 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <SearchX size={40} className="text-slate-400"/>
                    </div>
-                   <h3 className="text-xl font-bold text-slate-800 mb-2">Sonuç Bulunamadı</h3>
-                   <p className="text-slate-500 max-w-md mx-auto text-sm">Aradığınız kriterlere uygun ilan bulunamadı.</p>
+                   <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
+                   <p className="text-slate-500 max-w-md mx-auto text-sm">We couldn't find any listings matching your criteria.</p>
                    <Link href="/search" className="mt-6 inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline bg-indigo-50 px-6 py-3 rounded-lg transition-colors">
-                        <ArrowLeft size={16}/> Filtreleri Temizle
+                        <ArrowLeft size={16}/> Clear Filters
                    </Link>
                  </div>
                ) : (
@@ -120,9 +120,9 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                          <table className="w-full text-left text-sm whitespace-nowrap">
                            <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 font-bold text-xs uppercase">
                              <tr>
-                               <th className="px-4 py-3 w-16">Resim</th>
-                               <th className="px-4 py-3">İlan Detayları</th>
-                               <th className="px-4 py-3 text-right">Fiyat</th>
+                               <th className="px-4 py-3 w-16">Image</th>
+                               <th className="px-4 py-3">Details</th>
+                               <th className="px-4 py-3 text-right">Price</th>
                              </tr>
                            </thead>
                            <tbody className="divide-y divide-gray-100">
@@ -143,7 +143,6 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
 
                                  {/* Başlık, Konum ve Tarih */}
                                  <td className="px-4 py-2">
-                                   {/* MAX WIDTH AZALTILDI: max-w-[220px] */}
                                    <Link href={`/ilan/${ad.id}`} className="font-bold text-slate-800 hover:text-indigo-600 block text-sm truncate max-w-[220px] mb-1" title={ad.title}>
                                      {ad.title}
                                    </Link>
@@ -153,7 +152,7 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                                       </span>
                                       <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
                                       <span>
-                                        {new Date(ad.created_at).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}
+                                        {new Date(ad.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
                                       </span>
                                    </div>
                                  </td>

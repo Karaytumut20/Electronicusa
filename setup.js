@@ -11,482 +11,384 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 UPDATING CURRENCY DISPLAY TO '$' AND ENFORCING USD ONLY...\n" +
+    "\n🚀 TRANSLATING ALL REMAINING TURKISH UI ELEMENTS TO ENGLISH...\n" +
     colors.reset,
 );
 
 // ---------------------------------------------------------
-// 1. UPDATE lib/utils.ts (Change formatPrice to use '$' prefix)
+// 1. UPDATE app/search/page.tsx (English Text & Date Format)
 // ---------------------------------------------------------
-const utilsContent = `import { type ClassValue, clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
-
-export function formatPrice(price: number | string | null | undefined, currency: string = 'USD') {
-  if (price === null || price === undefined) return '$0';
-  const numPrice = typeof price === 'string' ? parseFloat(price) : price;
-  // Always format as USD with '$' prefix, ignoring the currency argument string suffix
-  return '$' + new Intl.NumberFormat('en-US', {
-    style: 'decimal',
-    maximumFractionDigits: 0,
-  }).format(numPrice);
-}
-
-export function formatDate(dateString: string | null | undefined) {
-  if (!dateString) return '';
-
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffTime = Math.abs(now.getTime() - date.getTime());
-  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return 'Today';
-  if (diffDays === 1) return 'Yesterday';
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
-
-export function truncate(str: string, length: number) {
-  if (!str) return '';
-  return str.length > length ? str.substring(0, length) + '...' : str;
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "lib/utils.ts"),
-    utilsContent.trim(),
-  );
-  console.log(colors.green + "✔ lib/utils.ts updated." + colors.reset);
-} catch (e) {
-  console.error("Error updating lib/utils.ts:", e.message);
-}
-
-// ---------------------------------------------------------
-// 2. UPDATE components/StickyAdHeader.tsx (Remove currency prop usage)
-// ---------------------------------------------------------
-const stickyHeaderContent = `"use client";
-import React, { useState, useEffect } from 'react';
-import { Phone } from 'lucide-react';
-
-type Props = {
-  title: string;
-  price: string;
-  currency?: string; // Optional/Ignored
-};
-
-export default function StickyAdHeader({ title, price }: Props) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 400) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
-
-  if (!isVisible) return null;
-
-  return (
-    <div className="fixed top-0 left-0 w-full bg-white shadow-md z-[80] border-b border-gray-200 animate-in slide-in-from-top duration-300 hidden md:block">
-      <div className="container max-w-[1150px] mx-auto px-4 h-[60px] flex items-center justify-between">
-
-        <div className="flex-1 min-w-0 pr-8">
-          <h2 className="text-[#333] font-bold text-sm truncate">{title}</h2>
-          <p className="text-xs text-gray-500">Ad No: 1029381</p>
-        </div>
-
-        <div className="flex items-center gap-6 shrink-0">
-          <span className="text-xl font-bold text-blue-900">{price}</span>
-
-          <button className="bg-blue-700 text-white px-6 py-2 rounded-sm font-bold text-sm hover:bg-blue-800 transition-colors flex items-center gap-2">
-            <Phone size={16} /> Contact Seller
-          </button>
-        </div>
-
-      </div>
-    </div>
-  );
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "components/StickyAdHeader.tsx"),
-    stickyHeaderContent.trim(),
-  );
-  console.log(
-    colors.green + "✔ components/StickyAdHeader.tsx updated." + colors.reset,
-  );
-} catch (e) {
-  console.error("Error updating components/StickyAdHeader.tsx:", e.message);
-}
-
-// ---------------------------------------------------------
-// 3. UPDATE app/ilan/[id]/page.tsx (Use formatPrice and remove manual currency display)
-// ---------------------------------------------------------
-const adDetailPageContent = `import React from 'react';
-import { notFound } from 'next/navigation';
-import { getAdDetailServer } from '@/lib/actions';
-import { createClient } from '@/lib/supabase/server';
-import Breadcrumb from '@/components/Breadcrumb';
-import Gallery from '@/components/Gallery';
-import MobileAdActionBar from '@/components/MobileAdActionBar';
-import AdActionButtons from '@/components/AdActionButtons';
-import StickyAdHeader from '@/components/StickyAdHeader';
-import SellerSidebar from '@/components/SellerSidebar';
-import Tabs from '@/components/AdDetail/Tabs';
-import FeaturesTab from '@/components/AdDetail/FeaturesTab';
-import LocationTab from '@/components/AdDetail/LocationTab';
-import TechnicalSpecsTab from '@/components/AdDetail/TechnicalSpecsTab';
-import ViewTracker from '@/components/ViewTracker';
-import LiveVisitorCount from '@/components/LiveVisitorCount';
-import Badge from '@/components/ui/Badge';
-import { Eye, MapPin, Calendar, Tag, AlertTriangle, Clock } from 'lucide-react';
-import { formatPrice } from '@/lib/utils'; // Import formatPrice
-
-export default async function AdDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const ad = await getAdDetailServer(Number(id));
-
-  if (!ad) return notFound();
-
-  // --- GÜVENLİK KONTROLÜ BAŞLANGIÇ ---
-  if (ad.status !== 'yayinda') {
-      const supabase = await createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      const isOwner = user && user.id === ad.user_id;
-      let isAdmin = false;
-
-      if (user) {
-          const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-          if (profile?.role === 'admin') isAdmin = true;
-      }
-
-      if (!isOwner && !isAdmin) {
-          return notFound();
-      }
-  }
-  // --- GÜVENLİK KONTROLÜ BİTİŞ ---
-
-  const formattedPrice = formatPrice(ad.price, ad.currency);
-  const location = \`\${ad.city || ''}, \${ad.district || ''}\`;
-  const sellerInfo = ad.profiles || { full_name: 'Unknown User', phone: '', email: '', show_phone: false };
-  const adImages = ad.images && ad.images.length > 0 ? ad.images : (ad.image ? [ad.image] : []);
-
-  const breadcrumbItems = [
-      { label: 'Home', href: '/' },
-      { label: 'Search', href: '/search' },
-      { label: 'Details' }
-  ];
-
-  const tabItems = [
-     { id: 'desc', label: 'Description', content: <div className="text-slate-700 leading-relaxed whitespace-pre-wrap text-base p-4">{ad.description}</div> },
-     { id: 'features', label: 'Features', content: <FeaturesTab ad={ad} /> },
-     { id: 'location', label: 'Location', content: <LocationTab city={ad.city} district={ad.district} /> }
-  ];
-
-  if (ad.technical_specs) {
-      tabItems.splice(1, 0, { id: 'tech_specs', label: 'Tech Specs', content: <TechnicalSpecsTab specs={ad.technical_specs} /> });
-  }
-
-  return (
-    <div className="pb-20 relative font-sans bg-[#F8FAFC] min-h-screen">
-      <ViewTracker adId={ad.id} />
-      <StickyAdHeader title={ad.title} price={formattedPrice} />
-
-      <div className="container mx-auto px-4 py-6 max-w-7xl">
-        <Breadcrumb items={breadcrumbItems} />
-
-        {ad.status !== 'yayinda' && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg shadow-sm">
-                <div className="flex items-center">
-                    <div className="flex-shrink-0">
-                        <Clock className="h-5 w-5 text-yellow-600" />
-                    </div>
-                    <div className="ml-3">
-                        <p className="text-sm font-bold text-yellow-800">
-                            This ad is currently {ad.status === 'onay_bekliyor' ? 'Pending Approval' : 'Inactive'}.
-                        </p>
-                        <p className="text-xs text-yellow-700 mt-1">
-                            Only you (the owner) and administrators can see this page. It is not publicly accessible.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        )}
-
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-          <div>
-            <h1 className="text-slate-900 font-bold text-2xl md:text-3xl leading-tight mb-2">{ad.title}</h1>
-            <div className="flex items-center gap-4 text-sm text-slate-500">
-               <span className="flex items-center gap-1"><MapPin size={16}/> {location}</span>
-               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-               <span className="text-indigo-600 font-bold">#{ad.id}</span>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3">
-              {ad.is_urgent && <Badge variant="danger" className="text-sm px-3 py-1 flex items-center gap-1"><AlertTriangle size={12}/> URGENT</Badge>}
-              {ad.is_vitrin && <Badge variant="warning" className="text-sm px-3 py-1 flex items-center gap-1"><Tag size={12}/> FEATURED</Badge>}
-              <LiveVisitorCount adId={ad.id} />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-8 space-y-8">
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden p-1">
-               <Gallery mainImage={ad.image} images={adImages} />
-            </div>
-
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex justify-between items-center">
-               <div>
-                 <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Price</p>
-                 <p className="text-4xl font-extrabold text-indigo-700 tracking-tight">{formattedPrice}</p>
-               </div>
-               <div className="hidden md:block">
-                 <AdActionButtons id={ad.id} title={ad.title} image={ad.image} sellerName={sellerInfo.full_name} />
-               </div>
-            </div>
-            <Tabs items={tabItems} />
-          </div>
-
-          <div className="lg:col-span-4 space-y-6">
-             <SellerSidebar
-                sellerId={ad.user_id}
-                sellerName={sellerInfo.full_name || 'User'}
-                sellerPhone={sellerInfo.phone || ''}
-                showPhone={sellerInfo.show_phone}
-                adId={ad.id}
-                adTitle={ad.title}
-                adImage={ad.image}
-                price={formattedPrice}
-                currency={ad.currency}
-             />
-
-             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <h3 className="font-bold text-slate-800 mb-4 text-sm uppercase tracking-wider border-b border-gray-50 pb-2">Details</h3>
-                <ul className="space-y-3 text-sm">
-                   <li className="flex justify-between border-b border-gray-50 pb-2">
-                        <span className="text-slate-500 flex items-center gap-2"><Calendar size={14}/> Posted Date</span>
-                        <span className="font-bold text-slate-900">{new Date(ad.created_at).toLocaleDateString()}</span>
-                   </li>
-                   {ad.brand && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Brand</span><span className="font-medium text-slate-900">{ad.brand}</span></li>}
-                   {ad.model && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Model</span><span className="font-medium text-slate-900">{ad.model}</span></li>}
-                   {ad.year && <li className="flex justify-between border-b border-gray-50 pb-2"><span className="text-slate-500">Year</span><span className="font-medium text-slate-900">{ad.year}</span></li>}
-                   <li className="flex justify-between pt-1">
-                      <span className="text-slate-500 flex items-center gap-2"><Eye size={14}/> Views</span>
-                      <span className="font-bold text-slate-900">{ad.view_count || 0}</span>
-                   </li>
-                </ul>
-             </div>
-          </div>
-        </div>
-      </div>
-      <MobileAdActionBar price={formattedPrice} phone={sellerInfo.show_phone ? sellerInfo.phone : undefined} />
-    </div>
-  );
-}
-`;
-
-try {
-  fs.writeFileSync(
-    path.join(process.cwd(), "app/ilan/[id]/page.tsx"),
-    adDetailPageContent.trim(),
-  );
-  console.log(
-    colors.green + "✔ app/ilan/[id]/page.tsx updated." + colors.reset,
-  );
-} catch (e) {
-  console.error("Error updating app/ilan/[id]/page.tsx:", e.message);
-}
-
-// ---------------------------------------------------------
-// 4. UPDATE app/ilan-ver/detay/page.tsx (Remove currency selector, enforce USD)
-// ---------------------------------------------------------
-const postAdContent = `"use client";
-import React, { useState, useEffect, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Loader2, ArrowLeft, Info, MapPin, Camera, Sparkles, Save, Cpu } from 'lucide-react';
-import { useToast } from '@/context/ToastContext';
-import { useAuth } from '@/context/AuthContext';
-import ComputerFields from '@/components/form/ComputerFields';
-import ImageUploader from '@/components/ui/ImageUploader';
+const searchPageContent = `import React from 'react';
+import { getAdsServer, getCategoryTreeServer } from '@/lib/actions';
 import AdCard from '@/components/AdCard';
-import { createAdAction } from '@/lib/actions';
-import { adSchema } from '@/lib/schemas';
-import { cities, getDistricts } from '@/lib/locations';
-import { Input } from '@/components/ui/Input';
-import { Textarea } from '@/components/ui/Textarea';
-import { techSpecsRequiredSlugs } from '@/lib/hierarchyData';
+import FilterSidebar from '@/components/FilterSidebar';
+import Pagination from '@/components/Pagination';
+import ViewToggle from '@/components/ViewToggle';
+import SmartCategoryGrid from '@/components/SmartCategoryGrid';
+import MobileFilterBar from '@/components/MobileFilterBar';
+import { SearchX, ArrowLeft, MapPin } from 'lucide-react';
+import Link from 'next/link';
+import { formatPrice } from '@/lib/utils';
 
-function PostAdFormContent() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { addToast } = useToast();
-  const { user } = useAuth();
-
-  const categorySlug = searchParams.get('cat')?.toLowerCase() || '';
-  const categoryPath = searchParams.get('path') || 'No Category Selected';
-  const urlBrand = searchParams.get('brand') || '';
-
-  const isTechSpecsRequired = techSpecsRequiredSlugs.some(slug =>
-    categorySlug.includes(slug) || categoryPath.toLowerCase().includes(slug)
-  );
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [images, setImages] = useState<string[]>([]);
-  const [errors, setErrors] = useState<any>({});
-  const [districts, setDistricts] = useState<string[]>([]);
-
-  const [formData, setFormData] = useState({
-    title: '', description: '', price: '', currency: 'USD', city: '', district: '',
-    brand: urlBrand,
-    processor: '', ram: '', screen_size: '', gpu_capacity: '', resolution: '', ssd_capacity: ''
-  });
-
-  useEffect(() => {
-    if (urlBrand) setFormData(prev => ({ ...prev, brand: urlBrand }));
-  }, [urlBrand]);
-
-  useEffect(() => {
-    if (formData.city) setDistricts(getDistricts(formData.city));
-  }, [formData.city]);
-
-  const handleInputChange = (e: any) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleDynamicChange = (e: any) => {
-     const { name, value } = e.target || e;
-     setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) { router.push('/login'); return; }
-
-    const rawData = {
-        ...formData,
-        category: categorySlug,
-        image: images[0] || null,
-        images: images,
-        price: Number(formData.price),
-    };
-
-    const result = adSchema.safeParse(rawData);
-    if (!result.success) {
-        const fieldErrors: any = {};
-        result.error.issues.forEach(issue => { fieldErrors[issue.path[0]] = issue.message; });
-        setErrors(fieldErrors);
-        addToast('Please fill in required fields.', 'error');
-        return;
+// Helper to find category in tree
+function findCategory(categories: any[], slug: string): any {
+  for (const cat of categories) {
+    if (cat.slug === slug) return cat;
+    if (cat.subs) {
+      const found = findCategory(cat.subs, slug);
+      if (found) return found;
     }
+  }
+  return null;
+}
 
-    setIsSubmitting(true);
-    const res = await createAdAction(rawData);
-    if (res.error) { addToast(res.error, 'error'); }
-    else {
-        addToast('Ad published successfully!', 'success');
-        router.push('/post-ad/success');
-    }
-    setIsSubmitting(false);
-  };
+export default async function SearchPage(props: { searchParams: Promise<any> }) {
+  const searchParams = await props.searchParams;
+  const categories = await getCategoryTreeServer();
+
+  // --- SMART LISTING LOGIC ---
+  const currentCategorySlug = searchParams.category;
+  const selectedCategory = currentCategorySlug ? findCategory(categories, currentCategorySlug) : null;
+  const isLeafCategory = selectedCategory && (!selectedCategory.subs || selectedCategory.subs.length === 0);
+
+  const manualSearch = searchParams.showResults === 'true';
+  const textSearch = !!searchParams.q;
+  const isBrandSelected = !!searchParams.brand;
+  const isModelSelected = !!searchParams.model;
+
+  const shouldFetchAds = manualSearch || textSearch || isBrandSelected || isModelSelected || isLeafCategory;
+
+  let ads = [];
+  let totalPages = 0;
+  let count = 0;
+
+  if (shouldFetchAds) {
+    const res = await getAdsServer(searchParams);
+    ads = res.data;
+    totalPages = res.totalPages;
+    count = res.count;
+  }
+
+  const viewMode = (searchParams.view as 'grid' | 'list' | 'table') || 'grid';
 
   return (
-    <div className="flex flex-col lg:flex-row gap-8 relative">
-      <div className="flex-1">
-        <div className="bg-indigo-50 border border-indigo-100 p-4 rounded-xl mb-6">
-            <p className="text-xs font-bold text-indigo-600 uppercase mb-1">Selected Category</p>
-            <h1 className="text-sm font-bold text-indigo-900">{categoryPath}</h1>
-        </div>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
 
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Info className="text-indigo-500" size={20}/> Basic Info</h3>
-             <div className="space-y-5">
-               <Input label="Title" name="title" value={formData.title} onChange={handleInputChange} error={errors.title} />
-               <Textarea label="Description" name="description" value={formData.description} onChange={handleInputChange} error={errors.description} />
-               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                 <div className="relative">
-                   <Input
-                      label="Price"
-                      name="price"
-                      type="number"
-                      value={formData.price}
-                      onChange={handleInputChange}
-                      error={errors.price}
-                      className="pl-8" // Add padding for the $ sign
-                   />
-                   {/* Dollar Sign Overlay */}
-                   <span className="absolute left-3 top-9 text-slate-500 font-bold">$</span>
-                 </div>
-                 {/* Currency Selector Removed - Defaulting to USD */}
+      <MobileFilterBar categories={categories} />
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+
+        <aside className="hidden lg:block lg:col-span-3">
+          <FilterSidebar categories={categories} />
+        </aside>
+
+        <main className="lg:col-span-9 min-w-0">
+
+           {!shouldFetchAds && (
+             <SmartCategoryGrid searchParams={searchParams} categories={categories} />
+           )}
+
+           {shouldFetchAds ? (
+             <>
+               <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center animate-in fade-in">
+                  <div>
+                     <h1 className="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        {selectedCategory ? selectedCategory.title : 'Search Results'}
+                        {searchParams.brand && <span className="text-indigo-600">/ {searchParams.brand}</span>}
+                        {searchParams.q && <span className="text-indigo-600">/ "{searchParams.q}"</span>}
+                     </h1>
+                     <p className="text-xs text-slate-500 font-medium mt-1">{count} listings found</p>
+                  </div>
+                  <ViewToggle currentView={viewMode} />
                </div>
-             </div>
-          </section>
 
-          {isTechSpecsRequired && (
-            <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 animate-in fade-in duration-300">
-               <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><Cpu className="text-orange-500" size={20}/> Technical Specifications</h3>
-               <ComputerFields data={formData} onChange={handleDynamicChange} categorySlug={categorySlug} />
-            </section>
-          )}
+               {(!ads || ads.length === 0) ? (
+                 <div className="bg-white p-16 rounded-xl border border-gray-100 text-center">
+                   <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <SearchX size={40} className="text-slate-400"/>
+                   </div>
+                   <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
+                   <p className="text-slate-500 max-w-md mx-auto text-sm">We couldn't find any listings matching your criteria.</p>
+                   <Link href="/search" className="mt-6 inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline bg-indigo-50 px-6 py-3 rounded-lg transition-colors">
+                        <ArrowLeft size={16}/> Clear Filters
+                   </Link>
+                 </div>
+               ) : (
+                 <>
+                   {/* --- GRID VIEW (Default) --- */}
+                   {viewMode === 'grid' && (
+                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                       {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="grid" />)}
+                     </div>
+                   )}
 
-          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-             <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2"><MapPin className="text-green-500" size={20}/> Location</h3>
-             <div className="grid grid-cols-2 gap-5">
-               <select name="city" onChange={handleInputChange} value={formData.city} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg text-sm">
-                    <option value="">Select City</option>
-                    {cities.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
-               </select>
-               <select name="district" value={formData.district} onChange={handleInputChange} className="w-full h-11 px-3 bg-white border border-gray-300 rounded-lg text-sm" disabled={!formData.city}>
-                    <option value="">Select District</option>
-                    {districts.map(d => <option key={d} value={d}>{d}</option>)}
-               </select>
-             </div>
-          </section>
+                   {/* --- LIST VIEW --- */}
+                   {viewMode === 'list' && (
+                     <div className="space-y-4">
+                       {ads.map((ad: any) => (
+                           <div key={ad.id} className="h-32">
+                               <AdCard ad={ad} viewMode="list" />
+                           </div>
+                       ))}
+                     </div>
+                   )}
 
-          <section className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
-             <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><Camera className="text-pink-500" size={20}/> Photos</h3>
-             <ImageUploader onImagesChange={setImages} initialImages={images} />
-          </section>
+                   {/* --- TABLE VIEW (OPTIMIZED) --- */}
+                   {viewMode === 'table' && (
+                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                       <div className="overflow-x-auto">
+                         <table className="w-full text-left text-sm whitespace-nowrap">
+                           <thead className="bg-slate-50 border-b border-gray-200 text-slate-500 font-bold text-xs uppercase">
+                             <tr>
+                               <th className="px-4 py-3 w-16">Image</th>
+                               <th className="px-4 py-3">Details</th>
+                               <th className="px-4 py-3 text-right">Price</th>
+                             </tr>
+                           </thead>
+                           <tbody className="divide-y divide-gray-100">
+                             {ads.map((ad: any) => (
+                               <tr key={ad.id} className="hover:bg-slate-50 transition-colors group relative">
+                                 {/* Resim */}
+                                 <td className="px-4 py-2">
+                                   <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={ad.image || 'https://via.placeholder.com/100'}
+                                        alt={ad.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <Link href={\`/ilan/\${ad.id}\`} className="absolute inset-0" />
+                                   </div>
+                                 </td>
 
-          <div className="flex justify-end pt-4">
-             <button type="submit" disabled={isSubmitting} className="bg-indigo-600 text-white px-10 py-4 rounded-xl font-bold hover:bg-indigo-700 disabled:opacity-50 shadow-lg transition-all">
-                {isSubmitting ? <Loader2 className="animate-spin" size={20}/> : 'Publish Listing'}
-             </button>
-          </div>
-        </form>
+                                 {/* Başlık, Konum ve Tarih */}
+                                 <td className="px-4 py-2">
+                                   <Link href={\`/ilan/\${ad.id}\`} className="font-bold text-slate-800 hover:text-indigo-600 block text-sm truncate max-w-[220px] mb-1" title={ad.title}>
+                                     {ad.title}
+                                   </Link>
+                                   <div className="flex items-center gap-3 text-[11px] text-slate-500">
+                                      <span className="flex items-center gap-1">
+                                        <MapPin size={12} className="text-slate-400"/> {ad.city} / {ad.district}
+                                      </span>
+                                      <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
+                                      <span>
+                                        {new Date(ad.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}
+                                      </span>
+                                   </div>
+                                 </td>
+
+                                 {/* Fiyat */}
+                                 <td className="px-4 py-2 font-bold text-indigo-700 text-sm text-right">
+                                   {formatPrice(ad.price, ad.currency)}
+                                 </td>
+                               </tr>
+                             ))}
+                           </tbody>
+                         </table>
+                       </div>
+                     </div>
+                   )}
+                 </>
+               )}
+
+               <div className="mt-10"><Pagination totalPages={totalPages} currentPage={Number(searchParams.page) || 1} /></div>
+             </>
+           ) : (
+             <div className="text-center text-gray-400 text-sm mt-4"></div>
+           )}
+        </main>
       </div>
     </div>
   );
-}
-
-export default function PostAdPage() {
-    return <Suspense fallback={<div>Loading...</div>}><PostAdFormContent /></Suspense>
 }
 `;
 
 try {
   fs.writeFileSync(
-    path.join(process.cwd(), "app/ilan-ver/detay/page.tsx"),
-    postAdContent.trim(),
+    path.join(process.cwd(), "app/search/page.tsx"),
+    searchPageContent.trim(),
   );
   console.log(
     colors.green +
-      "✔ app/ilan-ver/detay/page.tsx updated (Currency input updated)." +
+      "✔ app/search/page.tsx translated to English." +
       colors.reset,
   );
 } catch (e) {
-  console.error("Error updating app/ilan-ver/detay/page.tsx:", e.message);
+  console.error("Error updating search page:", e.message);
+}
+
+// ---------------------------------------------------------
+// 2. UPDATE components/MobileFilterBar.tsx (English Text)
+// ---------------------------------------------------------
+const mobileFilterContent = `"use client";
+import React, { useState } from 'react';
+import { Filter, X } from 'lucide-react';
+import FilterSidebar from '@/components/FilterSidebar';
+
+export default function MobileFilterBar({ categories }: { categories: any[] }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      {/* Mobile Filter Trigger Button */}
+      <div className="lg:hidden mb-4">
+        <button
+          onClick={() => setIsOpen(true)}
+          className="w-full bg-white border border-gray-200 text-slate-700 font-bold py-3 rounded-xl shadow-sm flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <Filter size={18} className="text-indigo-600" />
+          Filter & Sort
+        </button>
+      </div>
+
+      {/* Full Screen Filter Modal */}
+      {isOpen && (
+        <div className="fixed inset-0 z-[100] bg-white flex flex-col animate-in slide-in-from-bottom duration-300">
+
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 border-b border-gray-100 bg-white shrink-0">
+            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+              <Filter size={20} className="text-indigo-600"/> Filters
+            </h2>
+            <button
+              onClick={() => setIsOpen(false)}
+              className="p-2 bg-gray-100 rounded-full text-gray-500 hover:bg-gray-200 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
+
+          {/* Scrollable Content */}
+          <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+             {/* Re-using the existing FilterSidebar but stripping sticky behavior via container */}
+             <div className="[&>div]:!static [&>div]:!shadow-none [&>div]:!border-none [&>div]:!p-0 [&>div]:bg-transparent">
+                <FilterSidebar categories={categories} />
+             </div>
+          </div>
+
+          {/* Footer Actions */}
+          <div className="p-4 border-t border-gray-100 bg-white shrink-0">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow-lg hover:bg-indigo-700 transition-colors"
+            >
+              Show Results
+            </button>
+          </div>
+        </div>
+      )}
+    </>
+  );
+}
+`;
+
+try {
+  fs.writeFileSync(
+    path.join(process.cwd(), "components/MobileFilterBar.tsx"),
+    mobileFilterContent.trim(),
+  );
+  console.log(
+    colors.green +
+      "✔ components/MobileFilterBar.tsx translated to English." +
+      colors.reset,
+  );
+} catch (e) {
+  console.error("Error updating MobileFilterBar:", e.message);
+}
+
+// ---------------------------------------------------------
+// 3. UPDATE components/AdCard.tsx (Ensure English Badges)
+// ---------------------------------------------------------
+const adCardContent = `"use client";
+import React from 'react';
+import Link from 'next/link';
+import Image from 'next/image';
+import { MapPin, Star, Zap } from 'lucide-react';
+import { formatPrice } from '@/lib/utils';
+import { useFavorites } from '@/context/FavoritesContext';
+
+export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: string }) {
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const liked = isFavorite(ad.id);
+
+  const priceDisplay = formatPrice(ad.price, ad.currency);
+  const imageUrl = ad.image || 'https://via.placeholder.com/600x400?text=No+Image';
+
+  // Date formatting (English - US)
+  const dateStr = new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  return (
+    <Link href={\`/ilan/\${ad.id}\`} className="group block h-full">
+      <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
+
+        {/* IMAGE */}
+        <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-slate-50">
+          <Image
+            src={imageUrl}
+            alt={ad.title}
+            fill
+            className="object-cover group-hover:scale-110 transition-transform duration-700"
+            sizes="(max-width: 768px) 50vw, 25vw"
+          />
+
+          {/* BADGES (ENGLISH) */}
+          <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
+            {ad.is_urgent && (
+              <span className="bg-rose-500 text-white text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-lg">
+                <Zap size={10} fill="currentColor"/> URGENT
+              </span>
+            )}
+            {ad.is_vitrin && (
+              <span className="bg-yellow-400 text-black text-[8px] md:text-[10px] font-black px-2 py-0.5 rounded-md shadow-lg">
+                FEATURED
+              </span>
+            )}
+          </div>
+
+          <button
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(ad.id); }}
+            className="absolute top-2 right-2 z-20 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-md text-slate-400 hover:text-rose-500 transition-colors"
+          >
+            <Star size={16} className={liked ? "fill-rose-500 text-rose-500" : ""} />
+          </button>
+        </div>
+
+        {/* CONTENT */}
+        <div className="p-2.5 md:p-4 flex-1 flex flex-col">
+          <h3 className="font-bold text-slate-800 text-[11px] md:text-sm leading-tight line-clamp-2 mb-2 group-hover:text-indigo-600 transition-colors">
+            {ad.title}
+          </h3>
+
+          <div className="mt-auto">
+            <div className="text-indigo-700 font-black text-[13px] md:text-lg tracking-tight">
+              {priceDisplay}
+            </div>
+            <div className="flex justify-between items-center mt-1 border-t border-slate-50 pt-1.5 text-[9px] md:text-[10px] text-slate-400">
+              <span className="flex items-center gap-0.5 truncate max-w-[70%] italic">
+                <MapPin size={10} /> {ad.city}
+              </span>
+              <span className="font-medium whitespace-nowrap">
+                {dateStr}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Link>
+  );
+}
+`;
+
+try {
+  fs.writeFileSync(
+    path.join(process.cwd(), "components/AdCard.tsx"),
+    adCardContent.trim(),
+  );
+  console.log(
+    colors.green +
+      "✔ components/AdCard.tsx verified (English badges)." +
+      colors.reset,
+  );
+} catch (e) {
+  console.error("Error updating AdCard.tsx:", e.message);
 }
