@@ -66,7 +66,7 @@ export default function FavoritesPage() {
   return (
     <div className="bg-white border border-gray-200 rounded-sm shadow-sm p-6">
       <h1 className="text-xl font-bold text-[#333] mb-6 flex items-center gap-2">
-        Favori İlanlarım{" "}
+        My Favorite Ads{" "}
         <span className="text-sm font-normal text-gray-500">
           ({ads.length})
         </span>
@@ -75,9 +75,9 @@ export default function FavoritesPage() {
       {ads.length === 0 ? (
         <EmptyState
           icon={StarOff}
-          title="Favori İlanınız Yok"
-          description="Beğendiğiniz ilanları favoriye ekleyerek fiyat takibi yapabilirsiniz."
-          actionLabel="İlanlara Göz At"
+          title="No Favorite Ads"
+          description="Add ads to favorites to track price changes. fiyat takibi yapabilirsiniz."
+          actionLabel="Browse Ads"
           actionUrl="/search"
         />
       ) : (

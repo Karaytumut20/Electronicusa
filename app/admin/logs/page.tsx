@@ -18,7 +18,7 @@ export default async function AdminLogsPage() {
         <table className="w-full text-left text-sm">
             <thead className="bg-gray-50 border-b text-gray-500 uppercase text-xs">
                 <tr>
-                    <th className="p-4">Kullanıcı</th>
+                    <th className="p-4">User</th>
                     <th className="p-4">İşlem (Action)</th>
                     <th className="p-4">Detaylar (Metadata)</th>
                     <th className="p-4 text-right">Timestamp</th>

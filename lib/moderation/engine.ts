@@ -17,7 +17,7 @@ export function analyzeAdContent(title: string, description: string): Moderation
   if (foundBadWords.length > 0) {
     score += 100;
     flags.push('ILLEGAL_CONTENT');
-    return { score, flags, autoReject: true, rejectReason: `Yasaklı içerik tespit edildi: ${foundBadWords.join(', ')}` };
+    return { score, flags, autoReject: true, rejectReason: `Prohibited content detected: ${foundBadWords.join(', ')}` };
   }
 
   // 2. Rakip Site Kontrolü

@@ -38,7 +38,7 @@ export async function getTransactionsServer() {
     return data || [];
 }
 
-// Bakiye Yükle (Deposit)
+// Add Balance (Deposit)
 export async function depositToWalletAction(amount: number, cardInfo: any) {
     return await runServerAction('DEPOSIT_WALLET', async () => {
         const supabase = await createClient();

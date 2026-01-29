@@ -11,13 +11,13 @@ export default function WalletOverview({ balance, currency }: { balance: number,
   const { addToast } = useToast();
 
   const { runAction, loading } = useServerAction(depositToWalletAction, (data) => {
-      addToast(`${amount} TL başarıyla yüklendi.`, 'success');
+      addToast(`${amount} $ başarıyla yüklendi.`, 'success');
       setIsAdding(false);
   });
 
   const handleDeposit = () => {
       const numAmount = Number(amount);
-      if (numAmount < 10) { addToast('En az 10 TL yükleyebilirsiniz.', 'error'); return; }
+      if (numAmount < 10) { addToast('En az 10 $ yükleyebilirsiniz.', 'error'); return; }
 
       // Kart bilgisi mock gönderiliyor
       runAction(numAmount, { number: '1234' });
