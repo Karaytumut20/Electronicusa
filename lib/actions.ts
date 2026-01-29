@@ -6,7 +6,7 @@ import { logActivity } from '@/lib/logger'
 import { AdFormData } from '@/types'
 import { analyzeAdContent } from '@/lib/moderation/engine'
 
-// --- YARDIMCI FONKSİYONLAR ---
+// --- HELPER FUNCTIONS ---
 async function checkRateLimit(userId: string) {
     const supabase = await createClient();
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -14,7 +14,35 @@ async function checkRateLimit(userId: string) {
     return (count || 0) < 10;
 }
 
-// --- İLAN OLUŞTURMA ---
+// Recursively collect slug of the target category and all its descendants
+function getCategorySlugsRecursively(categories: any[], targetSlug: string): string[] {
+  let slugs: string[] = [];
+
+  function collect(cat: any) {
+    slugs.push(cat.slug);
+    if (cat.subs && cat.subs.length > 0) {
+      cat.subs.forEach((sub: any) => collect(sub));
+    }
+  }
+
+  function findAndCollect(list: any[]) {
+    for (const cat of list) {
+      if (cat.slug === targetSlug) {
+        collect(cat);
+        return true;
+      }
+      if (cat.subs && cat.subs.length > 0) {
+        if (findAndCollect(cat.subs)) return true;
+      }
+    }
+    return false;
+  }
+
+  findAndCollect(categories);
+  return slugs;
+}
+
+// --- CREATE AD ---
 export async function createAdAction(formData: Partial<AdFormData>) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -48,7 +76,7 @@ export async function createAdAction(formData: Partial<AdFormData>) {
   return { success: true, adId: data.id }
 }
 
-// --- İLAN LİSTELEME ---
+// --- LIST ADS ---
 export async function getInfiniteAdsAction(page = 1, limit = 20) {
     const supabase = await createClient();
     const start = (page - 1) * limit;
@@ -79,7 +107,22 @@ export async function getAdsServer(searchParams: any) {
   if (searchParams?.minPrice) query = query.gte('price', searchParams.minPrice);
   if (searchParams?.maxPrice) query = query.lte('price', searchParams.maxPrice);
   if (searchParams?.city) query = query.eq('city', searchParams.city);
-  if (searchParams?.category) query = query.eq('category', searchParams.category);
+
+  // CATEGORY FILTERING (Improved Logic)
+  if (searchParams?.category) {
+     // Fetch full tree to identify subcategories
+     const categories = await getCategoryTreeServer();
+     const slugs = getCategorySlugsRecursively(categories, searchParams.category);
+
+     if (slugs.length > 0) {
+         // Filter by the category OR any of its subcategories (using 'in' operator)
+         query = query.in('category', slugs);
+     } else {
+         // Exact match fallback (if category not found in tree)
+         query = query.eq('category', searchParams.category);
+     }
+  }
+
   if (searchParams?.brand) query = query.eq('brand', searchParams.brand);
 
   if (searchParams?.sort === 'price_asc') query = query.order('price', { ascending: true });
@@ -93,7 +136,7 @@ export async function getAdsServer(searchParams: any) {
   return { data: data || [], count: count || 0, totalPages: count ? Math.ceil(count / limit) : 0 };
 }
 
-// --- DİNAMİK KATEGORİ SİSTEMİ ---
+// --- DYNAMIC CATEGORY SYSTEM (Recursive) ---
 export const getCategoryTreeServer = unstable_cache(
   async () => {
     const supabase = createStaticClient();
@@ -105,11 +148,17 @@ export const getCategoryTreeServer = unstable_cache(
 
     if (error || !data) return [];
 
-    const roots = data.filter(c => !c.parent_id);
-    return roots.map(root => ({
-        ...root,
-        subs: data.filter(c => c.parent_id === root.id)
-    }));
+    // Build recursive tree to support infinite nesting
+    const buildTree = (items: any[], parentId: number | null = null): any[] => {
+      return items
+        .filter(item => item.parent_id === parentId)
+        .map(item => ({
+          ...item,
+          subs: buildTree(items, item.id)
+        }));
+    };
+
+    return buildTree(data, null);
   },
   ['category-tree-cache'],
   { revalidate: 3600, tags: ['categories'] }
@@ -125,7 +174,6 @@ export async function addCategoryAction(categoryData: { title: string, slug: str
     return { success: true, data };
 }
 
-// YENİ: Kategori Güncelleme
 export async function updateCategoryAction(id: number, categoryData: { title: string, slug: string, parent_id?: number }) {
     const supabase = await createClient();
     const { data, error } = await supabase.from('categories').update(categoryData).eq('id', id).select().single();
@@ -136,7 +184,6 @@ export async function updateCategoryAction(id: number, categoryData: { title: st
     return { success: true, data };
 }
 
-// YENİ: Kategori Silme
 export async function deleteCategoryAction(id: number) {
     const supabase = await createClient();
     const { error } = await supabase.from('categories').delete().eq('id', id);
@@ -147,7 +194,7 @@ export async function deleteCategoryAction(id: number) {
     return { success: true };
 }
 
-// --- DİĞER AKSİYONLAR ---
+// --- OTHER ACTIONS ---
 export async function getAdDetailServer(id: number) {
   const supabase = await createClient()
   const { data } = await supabase.from('ads').select('*, profiles(*), categories(title)').eq('id', id).single()

@@ -34,7 +34,6 @@ export default async function Home() {
               >
                 <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center border border-slate-200 shadow-sm group-hover:border-indigo-500 group-hover:shadow-md transition-all relative overflow-hidden">
                    <div className="absolute inset-0 bg-indigo-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                   {/* Icon placeholder using first letter */}
                    <span className="text-2xl font-black text-slate-700 group-hover:text-indigo-600 relative z-10">
                      {cat.title.charAt(0)}
                    </span>
@@ -48,14 +47,12 @@ export default async function Home() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* --- DESKTOP SIDEBAR (Hidden on mobile) --- */}
         <aside className="hidden lg:block lg:col-span-3 xl:col-span-2">
           <div className="sticky top-24">
             <Sidebar categories={categories} />
           </div>
         </aside>
 
-        {/* --- MAIN FEED --- */}
         <main className="lg:col-span-9 xl:col-span-10 min-w-0">
           <HomeFeed initialAds={initialAds} />
         </main>

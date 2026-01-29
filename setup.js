@@ -11,7 +11,7 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🚀 UPDATING SEARCH PAGE LOGIC FOR AUTO-RESULTS & GRID VIEW...\n" +
+    "\n🚀 IMPLEMENTING TABLE VIEW FOR SEARCH PAGE...\n" +
     colors.reset,
 );
 
@@ -22,10 +22,12 @@ import FilterSidebar from '@/components/FilterSidebar';
 import Pagination from '@/components/Pagination';
 import ViewToggle from '@/components/ViewToggle';
 import SmartCategoryGrid from '@/components/SmartCategoryGrid';
-import { SearchX, ArrowLeft, LayoutGrid } from 'lucide-react';
+import MobileFilterBar from '@/components/MobileFilterBar';
+import { SearchX, ArrowLeft, ArrowRight, MapPin, Calendar } from 'lucide-react';
 import Link from 'next/link';
+import { formatPrice } from '@/lib/utils'; // Price formatting imported
 
-// Kategori ağacında gezinerek seçilen kategoriyi bulan yardımcı fonksiyon
+// Helper to find category in tree
 function findCategory(categories: any[], slug: string): any {
   for (const cat of categories) {
     if (cat.slug === slug) return cat;
@@ -39,19 +41,13 @@ function findCategory(categories: any[], slug: string): any {
 
 export default async function SearchPage(props: { searchParams: Promise<any> }) {
   const searchParams = await props.searchParams;
-  const categories = await getCategoryTreeServer(); // Dinamik kategorileri çek
+  const categories = await getCategoryTreeServer();
 
-  // --- AKILLI LİSTELEME MANTIĞI ---
+  // --- SMART LISTING LOGIC ---
   const currentCategorySlug = searchParams.category;
-
-  // Seçilen kategoriyi bul
   const selectedCategory = currentCategorySlug ? findCategory(categories, currentCategorySlug) : null;
-
-  // Eğer seçilen kategori "yaprak" ise (alt kategorisi yoksa), ürünleri getir.
-  // Örn: "Airpods" seçilince altı olmadığı için direkt ürünler gelsin.
   const isLeafCategory = selectedCategory && (!selectedCategory.subs || selectedCategory.subs.length === 0);
 
-  // Manuel arama, metin arama, marka seçimi veya yaprak kategori seçimi varsa ürünleri getir
   const manualSearch = searchParams.showResults === 'true';
   const textSearch = !!searchParams.q;
   const isBrandSelected = !!searchParams.brand;
@@ -70,37 +66,35 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
     count = res.count;
   }
 
-  // Varsayılan görünüm 'grid' olsun (Anasayfa yapısı için)
   const viewMode = (searchParams.view as 'grid' | 'list' | 'table') || 'grid';
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-7xl">
+
+      <MobileFilterBar categories={categories} />
+
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-        {/* Sidebar: Masaüstünde solda filtreler */}
         <aside className="hidden lg:block lg:col-span-3">
           <FilterSidebar categories={categories} />
         </aside>
 
-        {/* Main Content */}
         <main className="lg:col-span-9 min-w-0">
 
-           {/* Eğer ürün listeleme modunda değilsek (yani hala kategori seçiyorsak) Grid'i göster */}
            {!shouldFetchAds && (
              <SmartCategoryGrid searchParams={searchParams} categories={categories} />
            )}
 
-           {/* Ürün Listeleme Modu */}
            {shouldFetchAds ? (
              <>
                <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex justify-between items-center animate-in fade-in">
                   <div>
                      <h1 className="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        {selectedCategory ? selectedCategory.title : 'Arama Sonuçları'}
+                        {selectedCategory ? selectedCategory.title : 'Search Results'}
                         {searchParams.brand && <span className="text-indigo-600">/ {searchParams.brand}</span>}
                         {searchParams.q && <span className="text-indigo-600">/ "{searchParams.q}"</span>}
                      </h1>
-                     <p className="text-xs text-slate-500 font-medium mt-1">{count} ilan bulundu</p>
+                     <p className="text-xs text-slate-500 font-medium mt-1">{count} listings found</p>
                   </div>
                   <ViewToggle currentView={viewMode} />
                </div>
@@ -110,26 +104,99 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                    <div className="bg-gray-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
                         <SearchX size={40} className="text-slate-400"/>
                    </div>
-                   <h3 className="text-xl font-bold text-slate-800 mb-2">Sonuç Bulunamadı</h3>
-                   <p className="text-slate-500 max-w-md mx-auto text-sm">Aradığınız kriterlere uygun ilan bulunamadı. Filtreleri temizleyerek veya farklı bir kategori seçerek tekrar deneyin.</p>
+                   <h3 className="text-xl font-bold text-slate-800 mb-2">No Results Found</h3>
+                   <p className="text-slate-500 max-w-md mx-auto text-sm">We couldn't find any listings matching your criteria.</p>
                    <Link href="/search" className="mt-6 inline-flex items-center gap-2 text-indigo-600 font-bold hover:underline bg-indigo-50 px-6 py-3 rounded-lg transition-colors">
-                        <ArrowLeft size={16}/> Tüm Filtreleri Temizle
+                        <ArrowLeft size={16}/> Clear Filters
                    </Link>
                  </div>
                ) : (
-                 // --- BURASI ANASAYFA YAPISINI (2'li GRID) SAĞLAYAN KISIM ---
-                 <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4' : 'space-y-4'}>
-                   {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode={viewMode} />)}
-                 </div>
+                 <>
+                   {/* --- GRID VIEW (Default) --- */}
+                   {viewMode === 'grid' && (
+                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                       {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="grid" />)}
+                     </div>
+                   )}
+
+                   {/* --- LIST VIEW --- */}
+                   {viewMode === 'list' && (
+                     <div className="space-y-4">
+                       {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="list" />)}
+                     </div>
+                   )}
+
+                   {/* --- TABLE VIEW (NEW) --- */}
+                   {viewMode === 'table' && (
+                     <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                       <div className="overflow-x-auto">
+                         <table className="w-full text-left text-sm whitespace-nowrap">
+                           <thead className="bg-gray-50 border-b border-gray-200 text-gray-500 font-medium">
+                             <tr>
+                               <th className="px-6 py-4 w-24">Image</th>
+                               <th className="px-6 py-4">Title</th>
+                               <th className="px-6 py-4">Price</th>
+                               <th className="px-6 py-4">Location</th>
+                               <th className="px-6 py-4">Date</th>
+                               <th className="px-6 py-4 text-right">Action</th>
+                             </tr>
+                           </thead>
+                           <tbody className="divide-y divide-gray-100">
+                             {ads.map((ad: any) => (
+                               <tr key={ad.id} className="hover:bg-indigo-50/50 transition-colors group">
+                                 <td className="px-6 py-3">
+                                   <div className="w-14 h-14 bg-gray-100 rounded-lg overflow-hidden border border-gray-200 relative">
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={ad.image || 'https://via.placeholder.com/100'}
+                                        alt={ad.title}
+                                        className="w-full h-full object-cover"
+                                      />
+                                   </div>
+                                 </td>
+                                 <td className="px-6 py-3">
+                                   <Link href={\`/ilan/\${ad.id}\`} className="font-bold text-slate-800 hover:text-indigo-600 block text-base mb-1">
+                                     {ad.title}
+                                   </Link>
+                                   <span className="text-xs text-slate-400">{ad.brand} {ad.model}</span>
+                                 </td>
+                                 <td className="px-6 py-3 font-bold text-indigo-600 text-base">
+                                   {formatPrice(ad.price, ad.currency)}
+                                 </td>
+                                 <td className="px-6 py-3 text-gray-600">
+                                   <div className="flex items-center gap-1.5">
+                                      <MapPin size={14} className="text-gray-400"/>
+                                      {ad.city}, {ad.district}
+                                   </div>
+                                 </td>
+                                 <td className="px-6 py-3 text-gray-500">
+                                   <div className="flex items-center gap-1.5 text-xs">
+                                      <Calendar size={14} className="text-gray-400"/>
+                                      {new Date(ad.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                                   </div>
+                                 </td>
+                                 <td className="px-6 py-3 text-right">
+                                   <Link
+                                     href={\`/ilan/\${ad.id}\`}
+                                     className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-100 text-gray-500 hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                                   >
+                                     <ArrowRight size={16} />
+                                   </Link>
+                                 </td>
+                               </tr>
+                             ))}
+                           </tbody>
+                         </table>
+                       </div>
+                     </div>
+                   )}
+                 </>
                )}
 
                <div className="mt-10"><Pagination totalPages={totalPages} currentPage={Number(searchParams.page) || 1} /></div>
              </>
            ) : (
-             // Kategori seçimi henüz bitmediyse veya root'taysak ve kategori seçimi grid'i de yoksa (nadir durum)
-             <div className="text-center text-gray-400 text-sm mt-4">
-                {/* Boşluk */}
-             </div>
+             <div className="text-center text-gray-400 text-sm mt-4"></div>
            )}
         </main>
       </div>
@@ -142,16 +209,9 @@ try {
   const filePath = path.join(process.cwd(), "app/search/page.tsx");
   fs.writeFileSync(filePath, searchPageContent.trim());
   console.log(
-    colors.green + "✔ app/search/page.tsx updated successfully." + colors.reset,
-  );
-  console.log(
-    colors.green + "  - Auto-fetch for leaf categories enabled." + colors.reset,
-  );
-  console.log(
-    colors.green + "  - Auto-fetch for brands enabled." + colors.reset,
-  );
-  console.log(
-    colors.green + "  - Mobile view set to 2-column grid." + colors.reset,
+    colors.green +
+      "✔ app/search/page.tsx updated with TABLE view." +
+      colors.reset,
   );
 } catch (err) {
   console.error(colors.bold + "✘ Error: " + err.message + colors.reset);
