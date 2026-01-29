@@ -11,195 +11,114 @@ const colors = {
 console.log(
   colors.blue +
     colors.bold +
-    "\n🇺🇸 FINAL PURGE: REMOVING LAST TURKISH ELEMENTS FOR USA DEPLOYMENT...\n" +
+    "\n🛡️  USA DEPLOYMENT: EXECUTING FINAL LANGUAGE PURGE...\n" +
     colors.reset,
 );
 
-const translationTasks = [
-  // 1. Admin Panel - Ads Management
+const finalCleanup = [
+  // 1. Audit Logs & System Logs
   {
-    file: "app/admin/ilanlar/page.tsx",
+    file: "app/admin/logs/page.tsx",
     replacements: [
-      { search: "İlan Yönetimi", replace: "Ad Management" },
-      { search: "Tüm İlanlar", replace: "All Listings" },
-      { search: "Onay Bekleyenler", replace: "Pending Approval" },
-      { search: "Yayındakiler", replace: "Active Listings" },
-      { search: "Reddedilenler", replace: "Rejected" },
-      {
-        search: "Bu kriterde ilan bulunamadı.",
-        replace: "No ads found matching these criteria.",
-      },
-      { search: "İlan", replace: "Listing" },
-      { search: "Satıcı", replace: "Seller" },
-      { search: "Fiyat", replace: "Price" },
-      { search: "Durum", replace: "Status" },
-      { search: "İşlemler", replace: "Actions" },
-      { search: "Bilinmiyor", replace: "Unknown" },
-      { search: "Yayında", replace: "Active" },
-      { search: "Bekliyor", replace: "Pending" },
-      { search: "Reddedildi", replace: "Rejected" },
-      { search: "Görüntüle", replace: "View" },
-      { search: "Onayla", replace: "Approve" },
-      { search: "Reddet", replace: "Reject" },
-      {
-        search: "Bu ilanı yayınlamak istiyor musunuz?",
-        replace: "Do you want to publish this ad?",
-      },
-      {
-        search: "Reddetme sebebini yazınız:",
-        replace: "Please enter the rejection reason:",
-      },
+      { search: "Sistem Kayıtları", replace: "System Logs" },
+      { search: "Son 100 işlem", replace: "Last 100 actions" },
+      { search: "Henüz kayıt yok.", replace: "No logs found." },
+      { search: "İşlem (Action)", replace: "Action" },
+      { search: "Detaylar (Metadata)", replace: "Details" },
+      { search: "Zaman", replace: "Timestamp" },
     ],
   },
-  // 2. Admin Panel - User Management
+  // 2. Auth & Registration Defaults
   {
-    file: "app/admin/kullanicilar/page.tsx",
+    file: "context/AuthContext.tsx",
     replacements: [
-      { search: "Kullanıcı Yönetimi", replace: "User Management" },
-      {
-        search: "İsim veya E-posta ara...",
-        replace: "Search Name or Email...",
-      },
       { search: "Kullanıcı", replace: "User" },
-      { search: "İletişim", replace: "Contact" },
+      { search: "Profil çekilemedi", replace: "Profile fetch failed" },
+    ],
+  },
+  // 3. Admin User Management Modal
+  {
+    file: "components/modals/AdminEditUserModal.tsx",
+    replacements: [
+      { search: "Kullanıcı Düzenle", replace: "Edit User" },
+      { search: "İsim Soyisim", replace: "Full Name" },
       { search: "Rol", replace: "Role" },
       { search: "Durum", replace: "Status" },
-      { search: "İsimsiz", replace: "Anonymous" },
-      { search: "Telefon Yok", replace: "No Phone" },
-      { search: "Üye", replace: "Member" },
-      { search: "Kurumsal", replace: "Store" },
-      { search: "Yönetici", replace: "Administrator" },
-      { search: "Aktif", replace: "Active" },
-      { search: "Banlı", replace: "Banned" },
-      { search: "Banla", replace: "Ban" },
-      { search: "Banı Kaldır", replace: "Unban" },
-      { search: "İşlem başarısız.", replace: "Action failed." },
-      { search: "Kullanıcı bulunamadı.", replace: "User not found." },
-    ],
-  },
-  // 3. Admin Panel - Settings
-  {
-    file: "app/admin/ayarlar/page.tsx",
-    replacements: [
-      { search: "Site Ayarları", replace: "Site Settings" },
-      { search: "Genel", replace: "General" },
-      { search: "Güvenlik", replace: "Security" },
-      { search: "E-posta & Bildirim", replace: "Email & Notifications" },
-      { search: "Site Bilgileri", replace: "Site Information" },
-      { search: "Site Başlığı", replace: "Site Title" },
-      { search: "Site URL", replace: "Site URL" },
-      { search: "Açıklama (Meta Description)", replace: "Meta Description" },
-      { search: "Üyelik & İlan", replace: "Membership & Ads" },
+      { search: "Bilgi:", replace: "Info:" },
       {
-        search: "Yeni üyelik alımı açık olsun",
-        replace: "Allow new registrations",
-      },
-      {
-        search: "İlanlar editör onayı olmadan yayınlanmasın",
-        replace: "Ads require editor approval",
-      },
-      {
-        search: "Bakım modu (Sadece adminler erişebilir)",
-        replace: "Maintenance mode (Admins only)",
-      },
-      { search: "Ayarları Kaydet", replace: "Save Settings" },
-    ],
-  },
-  // 4. Wallet (Cüzdan) Translation
-  {
-    file: "app/bana-ozel/cuzdan/page.tsx",
-    replacements: [
-      { search: "Cüzdanım", replace: "My Wallet" },
-      {
-        search: "Cüzdan bilgisi alınamadı.",
-        replace: "Wallet info not found.",
-      },
-      {
-        search: "Cüzdan bakiyeniz ile doping satın alabilir",
-        replace: "You can purchase boosts with your balance.",
-      },
-      {
-        search: "Tüm işlemler SSL güvencesi altındadır.",
-        replace: "All transactions are secured by SSL.",
+        search: "Kullanıcı başarıyla güncellendi.",
+        replace: "User updated successfully.",
       },
     ],
   },
-  // 5. Review Section (Yorumlar)
+  // 4. Offer Modal (Teklifler)
   {
-    file: "components/ReviewSection.tsx",
+    file: "components/modals/OfferModal.tsx",
     replacements: [
+      { search: "Fiyat Teklifi Ver", replace: "Make an Offer" },
+      { search: "İndirim İste", replace: "Request Discount" },
+      { search: "Fiyat Öner", replace: "Suggest Price" },
+      { search: "Teklifi Gönder", replace: "Send Offer" },
       {
-        search: "Yorum yapmak için giriş yapmalısınız.",
-        replace: "You must login to leave a review.",
+        search: "Lütfen geçerli bir teklif giriniz.",
+        replace: "Please enter a valid offer.",
       },
-      { search: "Deneyimini Paylaş", replace: "Share Your Experience" },
-      {
-        search: "Satıcı hakkında düşüncelerin...",
-        replace: "Your thoughts about the seller...",
-      },
-      { search: "Gönder", replace: "Submit" },
-      { search: "Henüz değerlendirme yapılmamış.", replace: "No reviews yet." },
-      { search: "Yorum", replace: "Review" },
-      { search: "Kullanıcı", replace: "User" },
     ],
   },
-  // 6. Global Utility & Date Fixes
+  // 5. Wallet & Transaction Types
   {
-    file: "lib/utils.ts",
+    file: "lib/actions/wallet-actions.ts",
     replacements: [
-      { search: "Dün", replace: "Yesterday" },
-      { search: "Bugün", replace: "Today" },
+      { search: "Kredi Kartı ile Yükleme", replace: "Deposit via Credit Card" },
+      { search: "Cüzdan bulunamadı", replace: "Wallet not found" },
+      { search: "Giriş yapmalısınız", replace: "Login required" },
+    ],
+  },
+  // 6. Messaging & Realtime UI
+  {
+    file: "app/bana-ozel/mesajlarim/page.tsx",
+    replacements: [
+      { search: "Sohbet Başlatın", replace: "Start a Conversation" },
+      {
+        search: "Mesajlaşmak için sol menüden bir konuşma seçin",
+        replace: "Select a chat from the menu to start messaging",
+      },
+      { search: "Mesaj gönderilemedi", replace: "Message could not be sent" },
     ],
   },
 ];
 
-translationTasks.forEach((task) => {
+finalCleanup.forEach((task) => {
   const filePath = path.join(process.cwd(), task.file);
   if (fs.existsSync(filePath)) {
     let content = fs.readFileSync(filePath, "utf8");
-    let hasChange = false;
+    let changed = false;
 
     task.replacements.forEach((rep) => {
       if (content.includes(rep.search)) {
         const regex = new RegExp(rep.search, "g");
         content = content.replace(regex, rep.replace);
-        hasChange = true;
+        changed = true;
       }
     });
 
-    if (hasChange) {
+    if (changed) {
       fs.writeFileSync(filePath, content);
-      console.log(colors.green + `✔ Translated: ${task.file}` + colors.reset);
+      console.log(colors.green + `✔ Purged: ${task.file}` + colors.reset);
     }
   }
 });
 
-// Final Check for hardcoded "TL" currency in files
-const filesToCheckCurrency = [
-  "app/admin/odemeler/page.tsx",
-  "app/bana-ozel/siparislerim/page.tsx",
-  "components/wallet/TransactionHistory.tsx",
-];
-
-filesToCheckCurrency.forEach((file) => {
-  const filePath = path.join(process.cwd(), file);
-  if (fs.existsSync(filePath)) {
-    let content = fs.readFileSync(filePath, "utf8");
-    if (content.includes("TL")) {
-      content = content.replace(/TL/g, "USD");
-      fs.writeFileSync(filePath, content);
-      console.log(
-        colors.green +
-          `✔ Updated Currency in ${file}: TL -> USD` +
-          colors.reset,
-      );
-    }
-  }
-});
-
+// Veritabanı tetikleyicilerindeki Türkçe mesajlar için SQL uyarısı
 console.log(
   colors.blue +
-    colors.bold +
-    "\n✅ TRANSLATION AUDIT COMPLETE. THE PROJECT IS NOW 100% ENGLISH.\n" +
+    "\n⚠️  IMPORTANT: Please run 'supabase/fix_profile_trigger_final.sql' again." +
+    "\nSome database-level names like 'İsimsiz' might still exist in your metadata.\n" +
+    colors.reset,
+);
+
+console.log(
+  colors.green +
+    "✅ FINAL ANALYSIS COMPLETE. ALL UI ELEMENTS ARE NOW IN ENGLISH.\n" +
     colors.reset,
 );

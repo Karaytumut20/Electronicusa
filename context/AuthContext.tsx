@@ -31,13 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         const { data: profile, error } = await supabase.from('profiles').select('*').eq('id', sessionUser.id).single();
 
         if (error) {
-            console.warn("Profil çekilemedi (İlk giriş olabilir):", error.message);
+            console.warn("Profile fetch failed (İlk giriş olabilir):", error.message);
         }
 
         setUser({
             id: sessionUser.id,
             email: sessionUser.email!,
-            name: profile?.full_name || sessionUser.email?.split('@')[0] || 'Kullanıcı',
+            name: profile?.full_name || sessionUser.email?.split('@')[0] || 'User',
             avatar: profile?.avatar_url,
             role: profile?.role || 'user'
         });
@@ -47,7 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setUser({
             id: sessionUser.id,
             email: sessionUser.email!,
-            name: sessionUser.email?.split('@')[0] || 'Kullanıcı',
+            name: sessionUser.email?.split('@')[0] || 'User',
             role: 'user'
           });
       }

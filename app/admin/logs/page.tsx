@@ -9,9 +9,9 @@ export default async function AdminLogsPage() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <ScrollText size={24} className="text-blue-600" /> Sistem Kayıtları (Audit Logs)
+            <ScrollText size={24} className="text-blue-600" /> System Logs (Audit Logs)
         </h1>
-        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Son 100 işlem</span>
+        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1 rounded-full">Last 100 actions</span>
       </div>
 
       <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -21,12 +21,12 @@ export default async function AdminLogsPage() {
                     <th className="p-4">Kullanıcı</th>
                     <th className="p-4">İşlem (Action)</th>
                     <th className="p-4">Detaylar (Metadata)</th>
-                    <th className="p-4 text-right">Zaman</th>
+                    <th className="p-4 text-right">Timestamp</th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
                 {logs.length === 0 ? (
-                    <tr><td colSpan={4} className="p-8 text-center text-gray-500">Henüz kayıt yok.</td></tr>
+                    <tr><td colSpan={4} className="p-8 text-center text-gray-500">No logs found.</td></tr>
                 ) : (
                     logs.map((log: any) => (
                         <tr key={log.id} className="hover:bg-gray-50 transition-colors">

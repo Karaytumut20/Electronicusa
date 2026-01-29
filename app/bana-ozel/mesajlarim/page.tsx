@@ -143,7 +143,7 @@ function MessagesContent() {
       setSending(false);
 
       if(error) {
-          addToast("Mesaj gönderilemedi", "error");
+          addToast("Message could not be sent", "error");
           setMessages(prev => prev.filter(m => m.id !== tempId));
       } else if (data) {
           setMessages(prev => {
@@ -339,9 +339,9 @@ function MessagesContent() {
                 <div className="w-32 h-32 bg-gray-200/50 rounded-full flex items-center justify-center mb-6 animate-in zoom-in duration-500">
                     <MessageSquare size={64} className="opacity-40"/>
                 </div>
-                <h3 className="font-bold text-xl text-gray-600 mb-2">Sohbet Başlatın</h3>
+                <h3 className="font-bold text-xl text-gray-600 mb-2">Start a Conversation</h3>
                 <p className="text-sm max-w-xs opacity-80">
-                    Mesajlaşmak için sol menüden bir konuşma seçin veya yeni bir ilana mesaj gönderin.
+                    Select a chat from the menu to start messaging veya yeni bir ilana mesaj gönderin.
                 </p>
             </div>
         )}

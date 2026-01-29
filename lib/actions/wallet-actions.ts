@@ -43,7 +43,7 @@ export async function depositToWalletAction(amount: number, cardInfo: any) {
     return await runServerAction('DEPOSIT_WALLET', async () => {
         const supabase = await createClient();
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Giriş yapmalısınız.');
+        if (!user) throw new Error('Login required.');
 
         // 1. Ödeme İşlemi (Adapter üzerinden)
         const processor = getPaymentProcessor();
@@ -55,7 +55,7 @@ export async function depositToWalletAction(amount: number, cardInfo: any) {
 
         // 2. Cüzdanı Bul
         const { data: wallet } = await supabase.from('wallets').select('*').eq('user_id', user.id).single();
-        if (!wallet) throw new Error('Cüzdan bulunamadı.');
+        if (!wallet) throw new Error('Wallet not found.');
 
         // 3. Bakiyeyi Güncelle (Atomic Increment yerine basit update kullanıyoruz, production'da RPC kullanılmalı)
         // RPC Örneği: await supabase.rpc('increment_balance', { wallet_id: wallet.id, amount: amount });
@@ -69,7 +69,7 @@ export async function depositToWalletAction(amount: number, cardInfo: any) {
             wallet_id: wallet.id,
             type: 'deposit',
             amount: amount,
-            description: 'Kredi Kartı ile Yükleme',
+            description: 'Deposit via Credit Card',
             reference_id: paymentResult.transactionId
         }]);
 

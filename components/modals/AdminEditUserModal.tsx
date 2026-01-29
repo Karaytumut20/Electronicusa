@@ -23,7 +23,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
 
         setLoading(false);
         if (res.success) {
-            addToast('Kullanıcı başarıyla güncellendi.', 'success');
+            addToast('User updated successfully.', 'success');
             onSuccess();
             onClose();
         } else {
@@ -37,7 +37,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
             <div className="bg-white rounded-xl shadow-2xl w-full max-w-md relative z-10 animate-in zoom-in-95 duration-200 overflow-hidden">
 
                 <div className="bg-slate-50 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
-                    <h3 className="font-bold text-slate-800 text-lg">Kullanıcı Düzenle</h3>
+                    <h3 className="font-bold text-slate-800 text-lg">Edit User</h3>
                     <button onClick={onClose} className="text-slate-400 hover:text-slate-600 transition-colors">
                         <X size={20} />
                     </button>
@@ -47,7 +47,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
 
                     <div>
                         <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 flex items-center gap-1">
-                           <User size={14}/> İsim Soyisim
+                           <User size={14}/> Full Name
                         </label>
                         <input
                             type="text"
@@ -61,7 +61,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
                     <div className="grid grid-cols-2 gap-4">
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 flex items-center gap-1">
-                               <Shield size={14}/> Rol
+                               <Shield size={14}/> Role
                             </label>
                             <select
                                 value={formData.role}
@@ -75,7 +75,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
                         </div>
                         <div>
                             <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5 flex items-center gap-1">
-                               <Activity size={14}/> Durum
+                               <Activity size={14}/> Status
                             </label>
                             <select
                                 value={formData.status}
@@ -90,7 +90,7 @@ export default function AdminEditUserModal({ user, isOpen, onClose, onSuccess })
                     </div>
 
                     <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 text-xs text-blue-700">
-                        <span className="font-bold">Bilgi:</span> Kullanıcı rolünü değiştirmek yetkilerini anında etkiler.
+                        <span className="font-bold">Info:</span> Kullanıcı rolünü değiştirmek yetkilerini anında etkiler.
                     </div>
 
                     <div className="pt-2">

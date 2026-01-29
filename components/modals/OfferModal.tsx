@@ -23,7 +23,7 @@ export default function OfferModal() {
     } else if (offerType === 'custom' && customPrice) {
       finalOffer = parseFloat(customPrice);
     } else {
-      addToast('Lütfen geçerli bir teklif giriniz.', 'error');
+      addToast('Please enter a valid offer.', 'error');
       return;
     }
 
@@ -39,7 +39,7 @@ export default function OfferModal() {
 
         <div className="flex justify-between items-center p-4 border-b border-gray-100">
           <h3 className="font-bold text-gray-800 flex items-center gap-2">
-            <Tag size={18} className="text-blue-600" /> Fiyat Teklifi Ver
+            <Tag size={18} className="text-blue-600" /> Make an Offer
           </h3>
           <button onClick={closeModal} className="text-gray-400 hover:text-gray-600">
             <X size={20} />
@@ -59,14 +59,14 @@ export default function OfferModal() {
                 onClick={() => setOfferType('percent')}
                 className={`flex-1 py-2 text-sm font-bold rounded border transition-colors ${offerType === 'percent' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}
               >
-                İndirim İste (%)
+                Request Discount (%)
               </button>
               <button
                 type="button"
                 onClick={() => setOfferType('custom')}
                 className={`flex-1 py-2 text-sm font-bold rounded border transition-colors ${offerType === 'custom' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'}`}
               >
-                Fiyat Öner (TL)
+                Suggest Price (TL)
               </button>
             </div>
 
@@ -107,7 +107,7 @@ export default function OfferModal() {
               type="submit"
               className="w-full bg-[#ffe800] text-black font-bold py-3 rounded-sm hover:bg-yellow-400 transition-colors shadow-sm"
             >
-              Teklifi Gönder
+              Send Offer
             </button>
           </form>
         </div>
