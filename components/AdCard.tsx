@@ -21,12 +21,12 @@ export default function AdCard({ ad, viewMode = 'grid' }: { ad: any, viewMode?: 
       <div className="bg-white rounded-xl md:rounded-2xl border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 h-full flex flex-col relative overflow-hidden">
 
         {/* IMAGE */}
-        <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-slate-50">
+        <div className="relative aspect-[1/1] xs:aspect-[4/3] overflow-hidden bg-white">
           <Image
             src={imageUrl}
             alt={ad.title}
             fill
-            className="object-cover group-hover:scale-110 transition-transform duration-700"
+            className="object-contain p-2 group-hover:scale-105 transition-transform duration-700"
             sizes="(max-width: 768px) 50vw, 25vw"
           />
 

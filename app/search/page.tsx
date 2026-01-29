@@ -97,7 +97,7 @@ export default async function SearchPage(props: { searchParams: Promise<any> }) 
                  <>
                    {/* --- GRID VIEW (Default) --- */}
                    {viewMode === 'grid' && (
-                     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
+                     <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                        {ads.map((ad: any) => <AdCard key={ad.id} ad={ad} viewMode="grid" />)}
                      </div>
                    )}

@@ -63,7 +63,7 @@ export default function HomeFeed({ initialAds }: { initialAds: any[] }) {
       </div>
 
       {/* Grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
         {ads.map((ad) => (
           <div key={ad.id} className="h-full animate-in fade-in zoom-in-95 duration-500">
             <AdCard ad={ad} viewMode="grid" />
