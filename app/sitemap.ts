@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/client';
 
