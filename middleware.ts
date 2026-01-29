@@ -31,22 +31,33 @@ export async function middleware(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
-  // 1. Protected Routes (Dashboard & Post Ad - UPDATED)
-  // Replaces '/bana-ozel' and '/ilan-ver' checks
+  // 1. Protected Routes (Dashboard & Post Ad)
   if (path.startsWith('/dashboard') || path.startsWith('/post-ad')) {
     if (!user) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
   }
 
-  // 2. Admin Protection
+  // 2. Admin Protection (Role Check Added)
   if (path.startsWith('/admin') && path !== '/admin/login') {
     if (!user) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
+
+    // Check user role from database
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    // If not admin, redirect to home with error
+    if (profile?.role !== 'admin') {
+       return NextResponse.redirect(new URL('/?error=unauthorized_admin', request.url));
+    }
   }
 
-  // 3. Guest Only Routes
+  // 3. Guest Only Routes (Login/Register)
   if (user) {
       if (path === '/login' || path === '/register') {
           return NextResponse.redirect(new URL('/dashboard', request.url));

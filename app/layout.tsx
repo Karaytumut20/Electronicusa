@@ -6,13 +6,14 @@ import { Providers } from "@/components/Providers";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ModalRoot from "@/components/ModalRoot";
-import { getSystemSettings } from "@/lib/adminActions"; // Ayarları çekmek için
+import { getSystemSettings } from "@/lib/adminActions";
+import AuthErrorListener from "@/components/AuthErrorListener"; // Added
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Marketplace - Global İlan Platformu",
-  description: "Dünyanın en büyük ilan platformu.",
+  title: "Marketplace - Global Trading Platform",
+  description: "The world's largest classifieds platform.",
 };
 
 export default async function RootLayout({
@@ -20,16 +21,15 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  // Veritabanından Site İsmini Çek
   const settings = await getSystemSettings();
-  const siteName = settings?.site_name || 'ElectronicUSA'; // Varsayılan değer
+  const siteName = settings?.site_name || 'ElectronicUSA';
 
   return (
     <html lang="en" className="light">
       <body className={inter.className}>
         <Providers>
+          <AuthErrorListener /> {/* Listen for auth errors */}
           <div className="flex flex-col min-h-screen">
-            {/* Site ismini Header'a prop olarak gönder */}
             <Header siteName={siteName} />
             <main className="flex-1">
               {children}

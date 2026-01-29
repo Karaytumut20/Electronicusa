@@ -3,11 +3,19 @@ import React, { useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { Menu } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
-import Link from 'next/link'; // Link eklendi
+import Link from 'next/link';
+import { usePathname } from 'next/navigation'; // Path kontrolü için eklendi
 
 export default function AdminLayoutWrapper({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const { user } = useAuth();
+  const pathname = usePathname(); // Mevcut sayfa yolu
+
+  // --- KRİTİK KONTROL: Login sayfasındaysak Sidebar'ı GİZLE ---
+  // Sadece içeriği (Login Formunu) döndür, wrapper stillerini uygulama.
+  if (pathname === '/admin/login') {
+      return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 flex font-sans text-slate-800">
@@ -23,7 +31,7 @@ export default function AdminLayoutWrapper({ children }: { children: React.React
                 <Menu size={24} />
             </button>
 
-            {/* Logo ve Başlık (Artık Tıklanabilir Link) */}
+            {/* Logo ve Başlık (Tıklanabilir Link) */}
             <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
                 <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center font-bold text-sm text-white shadow-indigo-500/30">
                   E
