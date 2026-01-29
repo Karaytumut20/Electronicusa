@@ -152,3 +152,65 @@ export async function getSavedSearchesClient(userId: string) {
 export async function deleteSavedSearchClient(id: number) {
     await supabase.from('saved_searches').delete().eq('id', id);
 }
+// --- MISSING FUNCTIONS ADDED BY SETUP.JS ---
+
+export async function addReviewClient(targetId: string, rating: number, comment: string, reviewerId: string) {
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert([{
+        target_user_id: targetId,
+        rating,
+        comment,
+        reviewer_id: reviewerId
+      }])
+      .select()
+      .single();
+    return { data, error };
+}
+
+export async function getReviewsClient(targetId: string) {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, reviewer:profiles!reviewer_id(full_name, avatar_url)')
+      .eq('target_user_id', targetId)
+      .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function getAdminAdsClient() {
+    const { data, error } = await supabase
+      .from('ads')
+      .select('*, profiles(full_name)')
+      .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function getAllUsersClient() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function updateUserStatusClient(userId: string, status: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ status })
+      .eq('id', userId);
+    return { data, error };
+}
+
+export async function updateUserRoleeClient(userId: string, role: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId);
+    return { data, error };
+}

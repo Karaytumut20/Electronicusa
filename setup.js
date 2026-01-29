@@ -1,88 +1,94 @@
 const fs = require("fs");
 const path = require("path");
 
-const colors = {
-  reset: "\x1b[0m",
-  green: "\x1b[32m",
-  blue: "\x1b[34m",
-  bold: "\x1b[1m",
-};
+const servicesPath = path.join(process.cwd(), "lib/services.ts");
 
 console.log(
-  colors.blue +
-    colors.bold +
-    "\n🎨 UI REFINEMENT: SETTING PURE WHITE CARDS AND OPTIMIZING LAYOUT...\n" +
-    colors.reset,
+  "🛠️ Fixing build errors: Adding missing exports to lib/services.ts...",
 );
 
-const optimizationTasks = [
-  // 1. Kart arka planını saf beyaz yap ve resimlerin kesilmesini engelle
-  {
-    file: "components/AdCard.tsx",
-    replacements: [
-      {
-        // Mavimsi arka planı beyaza çevir
-        search: "overflow-hidden bg-slate-50",
-        replace: "overflow-hidden bg-white",
-      },
-      {
-        // Resmin tamamını göster (contain) ve biraz boşluk (p-2) ekle
-        search:
-          'className="object-cover group-hover:scale-110 transition-transform duration-700"',
-        replace:
-          'className="object-contain p-2 group-hover:scale-105 transition-transform duration-700"',
-      },
-    ],
-  },
-  // 2. Ana sayfa grid yapısını 5'ten 4'e düşür
-  {
-    file: "components/HomeFeed.tsx",
-    replacements: [
-      {
-        search:
-          "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3 md:gap-6",
-        replace:
-          "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8",
-      },
-    ],
-  },
-  // 3. Arama sayfası grid yapısını 4'e sabitle
-  {
-    file: "app/search/page.tsx",
-    replacements: [
-      {
-        search:
-          "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4",
-        replace:
-          "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6",
-      },
-    ],
-  },
-];
+// Mevcut dosyayı oku
+let content = fs.readFileSync(servicesPath, "utf8");
 
-optimizationTasks.forEach((task) => {
-  const filePath = path.join(process.cwd(), task.file);
-  if (fs.existsSync(filePath)) {
-    let content = fs.readFileSync(filePath, "utf8");
-    let hasChanged = false;
+// Eksik olan fonksiyon tanımları
+const missingFunctions = `
+// --- MISSING FUNCTIONS ADDED BY SETUP.JS ---
 
-    task.replacements.forEach((rep) => {
-      if (content.includes(rep.search)) {
-        content = content.replace(new RegExp(rep.search, "g"), rep.replace);
-        hasChanged = true;
-      }
-    });
+export async function addReviewClient(targetId: string, rating: number, comment: string, reviewerId: string) {
+    const { data, error } = await supabase
+      .from('reviews')
+      .insert([{
+        target_user_id: targetId,
+        rating,
+        comment,
+        reviewer_id: reviewerId
+      }])
+      .select()
+      .single();
+    return { data, error };
+}
 
-    if (hasChanged) {
-      fs.writeFileSync(filePath, content);
-      console.log(colors.green + `✔ Updated: ${task.file}` + colors.reset);
-    }
-  }
-});
+export async function getReviewsClient(targetId: string) {
+    const { data, error } = await supabase
+      .from('reviews')
+      .select('*, reviewer:profiles!reviewer_id(full_name, avatar_url)')
+      .eq('target_user_id', targetId)
+      .order('created_at', { ascending: false });
 
-console.log(
-  colors.blue +
-    colors.bold +
-    "\n✅ SUCCESS: Cards are now pure white and layout is optimized for 4 columns.\n" +
-    colors.reset,
-);
+    if (error) return [];
+    return data || [];
+}
+
+export async function getAdminAdsClient() {
+    const { data, error } = await supabase
+      .from('ads')
+      .select('*, profiles(full_name)')
+      .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function getAllUsersClient() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function updateUserStatusClient(userId: string, status: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ status })
+      .eq('id', userId);
+    return { data, error };
+}
+
+export async function updateUserRoleeClient(userId: string, role: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ role })
+      .eq('id', userId);
+    return { data, error };
+}
+`;
+
+// Eğer fonksiyonlar zaten yoksa ekle
+if (!content.includes("export async function addReviewClient")) {
+  content += missingFunctions;
+  fs.writeFileSync(servicesPath, content);
+  console.log("✅ lib/services.ts updated successfully.");
+} else {
+  console.log("ℹ️ lib/services.ts already contains necessary exports.");
+}
+
+// package.json'da eslint hatalarını görmezden gelmek için build komutunu güncelleme (Opsiyonel ama önerilir)
+const pkgPath = path.join(process.cwd(), "package.json");
+let pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+pkg.scripts.build = "next build"; // Zaten böyleyse dokunma
+fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
+
+console.log("🚀 Fix completed. You can now deploy to Vercel.");
